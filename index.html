@@ -1,0 +1,2817 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Avaliação de Desempenho - Microsoft 365</title>
+    
+    <!-- MSAL.js para autenticação Microsoft -->
+    <script src="https://alcdn.msauth.net/browser/2.38.0/js/msal-browser.min.js"></script>
+    
+    <style>
+        /* ===== RESET & BASE ===== */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0f5f0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        .container {
+            max-width: 1200px;
+            width: 100%;
+            margin: auto;
+            background: #ffffff;
+            padding: 30px 35px;
+            border-radius: 16px;
+            box-shadow: 0 8px 30px rgba(0, 60, 30, 0.12);
+            transition: all 0.2s;
+        }
+
+        :root {
+            --verde-escuro: #1a5c3a;
+            --verde-medio: #2a7a4a;
+            --verde-claro: #4a9a6a;
+            --verde-suave: #e8f5ee;
+            --verde-borda: #b8d9c8;
+            --verde-destaque: #d4f0e0;
+            --azul-microsoft: #0078d4;
+            --laranja: #d48a3a;
+        }
+
+        /* ===== HEADER ===== */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 18px;
+            border-bottom: 3px solid var(--verde-medio);
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-placeholder {
+            background: var(--verde-escuro);
+            color: white;
+            font-weight: 700;
+            font-size: 18px;
+            padding: 10px 18px;
+            border-radius: 8px;
+            letter-spacing: 1px;
+        }
+
+        .logo-area h1 {
+            color: var(--verde-escuro);
+            font-size: 24px;
+            font-weight: 700;
+        }
+        .logo-area h1 span {
+            font-weight: 300;
+            color: var(--verde-claro);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: var(--verde-suave);
+            padding: 8px 18px;
+            border-radius: 30px;
+            border: 2px solid var(--verde-borda);
+        }
+        .user-info .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--verde-medio);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .user-info .user-name {
+            font-weight: 500;
+            color: var(--verde-escuro);
+            font-size: 14px;
+        }
+        .user-info .user-role {
+            font-size: 12px;
+            color: #5a7a6a;
+            background: white;
+            padding: 2px 12px;
+            border-radius: 12px;
+        }
+        .btn-logout {
+            background: transparent;
+            border: 2px solid #b33;
+            color: #b33;
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s;
+        }
+        .btn-logout:hover {
+            background: #b33;
+            color: white;
+        }
+
+        .status-online {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: var(--verde-medio);
+        }
+        .status-online .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #2ecc71;
+            display: inline-block;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.3; }
+            100% { opacity: 1; }
+        }
+
+        /* ===== ABAS ===== */
+        .tabs {
+            display: flex;
+            gap: 0;
+            margin-bottom: 25px;
+            background: var(--verde-suave);
+            border-radius: 12px;
+            padding: 4px;
+            border: 2px solid var(--verde-borda);
+            overflow-x: auto;
+        }
+        .tab-btn {
+            padding: 12px 25px;
+            border: none;
+            background: transparent;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            color: #5a7a6a;
+            cursor: pointer;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+        .tab-btn:hover {
+            background: rgba(42, 122, 74, 0.1);
+        }
+        .tab-btn.active {
+            background: var(--verde-medio);
+            color: white;
+            box-shadow: 0 4px 12px rgba(26, 92, 58, 0.3);
+        }
+        .tab-btn .badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.3);
+            border-radius: 50%;
+            padding: 0 8px;
+            font-size: 12px;
+            margin-left: 5px;
+        }
+        .tab-btn.active .badge {
+            background: rgba(255,255,255,0.25);
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ===== BARRA DE PROGRESSO ===== */
+        .progress-container {
+            width: 100%;
+            background: #e0ece0;
+            border-radius: 10px;
+            height: 8px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            width: 33.33%;
+            height: 8px;
+            background: var(--verde-medio);
+            border-radius: 10px;
+            transition: width 0.4s ease;
+        }
+
+        /* ===== PESQUISA DE COLABORADOR ===== */
+        .pesquisa-area {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+            background: var(--verde-suave);
+            padding: 12px 20px;
+            border-radius: 12px;
+            border: 2px solid var(--verde-borda);
+            margin-bottom: 20px;
+        }
+
+        .pesquisa-area label {
+            font-weight: 600;
+            color: var(--verde-escuro);
+            font-size: 14px;
+        }
+
+        .pesquisa-area input {
+            padding: 10px 16px;
+            border: 2px solid var(--verde-borda);
+            border-radius: 8px;
+            font-size: 14px;
+            width: 150px;
+            background: white;
+            transition: border 0.3s;
+        }
+        .pesquisa-area input:focus {
+            border-color: var(--verde-medio);
+            outline: none;
+        }
+        .pesquisa-area input:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .pesquisa-area .btn-buscar {
+            background: var(--verde-medio);
+            color: white;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .pesquisa-area .btn-buscar:hover {
+            background: var(--verde-escuro);
+            transform: scale(1.02);
+        }
+        .pesquisa-area .btn-buscar:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .pesquisa-area .avaliador-nome {
+            font-weight: 500;
+            color: var(--verde-escuro);
+            padding: 6px 14px;
+            background: white;
+            border-radius: 20px;
+            border: 1px solid var(--verde-borda);
+            font-size: 14px;
+            margin-left: auto;
+        }
+
+        .msg-pesquisa {
+            font-size: 13px;
+            font-weight: 500;
+            padding: 4px 12px;
+            border-radius: 6px;
+            min-width: 150px;
+        }
+        .msg-pesquisa.erro { color: #b33; }
+        .msg-pesquisa.sucesso { color: var(--verde-escuro); }
+        .msg-pesquisa.aviso { color: var(--laranja); }
+
+        /* ===== STEPS ===== */
+        .steps {
+            display: flex;
+            justify-content: center;
+            gap: 0;
+            margin-bottom: 25px;
+            background: var(--verde-suave);
+            border-radius: 50px;
+            padding: 6px;
+            border: 2px solid var(--verde-borda);
+        }
+        .step-btn {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            background: transparent;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 15px;
+            color: #5a7a6a;
+            cursor: pointer;
+            transition: all 0.3s;
+            max-width: 220px;
+        }
+        .step-btn:hover {
+            background: rgba(42, 122, 74, 0.1);
+        }
+        .step-btn.active {
+            background: var(--verde-medio);
+            color: white;
+            box-shadow: 0 4px 12px rgba(26, 92, 58, 0.3);
+        }
+        .step-btn .num {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            width: 26px;
+            height: 26px;
+            line-height: 26px;
+            text-align: center;
+            font-size: 13px;
+            margin-right: 8px;
+        }
+        .step-btn.active .num {
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        .page {
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+        .page.active {
+            display: block;
+        }
+
+        /* ===== INTRODUÇÃO ===== */
+        .intro-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin: 20px 0;
+        }
+        .intro-card {
+            background: var(--verde-suave);
+            padding: 25px;
+            border-radius: 12px;
+            border-left: 5px solid var(--verde-medio);
+        }
+        .intro-card h3 {
+            color: var(--verde-escuro);
+            margin-bottom: 12px;
+            font-size: 18px;
+        }
+        .intro-card ul {
+            list-style: none;
+            padding: 0;
+        }
+        .intro-card ul li {
+            padding: 6px 0;
+            padding-left: 24px;
+            position: relative;
+            color: #2a4a3a;
+            font-size: 14px;
+        }
+        .intro-card ul li::before {
+            content: "✅";
+            position: absolute;
+            left: 0;
+            color: var(--verde-medio);
+        }
+        .intro-card p {
+            color: #2a4a3a;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .dicionario-item {
+            background: white;
+            border-radius: 8px;
+            padding: 14px 18px;
+            margin-bottom: 10px;
+            border: 1px solid var(--verde-borda);
+        }
+        .dicionario-item strong {
+            color: var(--verde-escuro);
+            display: block;
+            margin-bottom: 4px;
+        }
+        .dicionario-item p {
+            margin: 0;
+            font-size: 13px;
+            color: #3a5a4a;
+        }
+
+        /* ===== AVALIAÇÃO ===== */
+        .avaliacao-header {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            background: var(--verde-suave);
+            padding: 18px 22px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border: 1px solid var(--verde-borda);
+        }
+        .avaliacao-header .campo {
+            flex: 1;
+            min-width: 140px;
+        }
+        .avaliacao-header .campo label {
+            font-size: 12px;
+            text-transform: uppercase;
+            color: #4a7a5a;
+            font-weight: 700;
+            display: block;
+        }
+        .avaliacao-header .campo .valor {
+            font-weight: 600;
+            color: var(--verde-escuro);
+            font-size: 15px;
+        }
+
+        .competencia-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            padding: 14px 16px;
+            border-bottom: 1px solid #e8f0e8;
+            gap: 10px 20px;
+            transition: background 0.2s;
+        }
+        .competencia-row:hover {
+            background: #f8fcf8;
+        }
+        .competencia-row .nome {
+            flex: 2;
+            min-width: 200px;
+            font-weight: 500;
+            color: #1a3a2a;
+            font-size: 14px;
+        }
+        .competencia-row .peso {
+            color: #5a7a6a;
+            font-size: 13px;
+            min-width: 70px;
+        }
+        .competencia-row select {
+            padding: 8px 12px;
+            border: 2px solid var(--verde-borda);
+            border-radius: 8px;
+            background: white;
+            font-size: 14px;
+            min-width: 180px;
+            cursor: pointer;
+            transition: border 0.2s;
+        }
+        .competencia-row select:focus {
+            border-color: var(--verde-medio);
+            outline: none;
+        }
+        .competencia-row select:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .competencia-row .resultado {
+            min-width: 70px;
+            font-weight: 600;
+            color: var(--verde-escuro);
+            text-align: center;
+        }
+        .competencia-row .status-indicator {
+            font-size: 18px;
+            min-width: 30px;
+            text-align: center;
+        }
+
+        .btn-calcular {
+            background: var(--verde-medio);
+            color: white;
+            border: none;
+            padding: 14px 35px;
+            border-radius: 30px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 20px 0;
+        }
+        .btn-calcular:hover {
+            background: var(--verde-escuro);
+            transform: scale(1.02);
+            box-shadow: 0 4px 15px rgba(26, 92, 58, 0.3);
+        }
+        .btn-calcular:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .resultado-box {
+            background: var(--verde-destaque);
+            padding: 20px 25px;
+            border-radius: 12px;
+            border: 2px solid var(--verde-borda);
+            margin: 15px 0;
+            display: none;
+        }
+        .resultado-box.visible {
+            display: block;
+        }
+        .resultado-box .nota-final {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: var(--verde-escuro);
+        }
+        .resultado-box .classif {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+        .resultado-box .classif.acima {
+            color: #1a7a3a;
+        }
+        .resultado-box .classif.deacordo {
+            color: #2a6a8a;
+        }
+        .resultado-box .classif.abaixo {
+            color: #b33;
+        }
+
+        /* ===== FEEDBACK ===== */
+        .feedback-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin: 15px 0;
+        }
+        .feedback-grid textarea {
+            width: 100%;
+            min-height: 100px;
+            padding: 12px 15px;
+            border: 2px solid var(--verde-borda);
+            border-radius: 10px;
+            font-family: inherit;
+            font-size: 14px;
+            resize: vertical;
+            transition: border 0.2s;
+        }
+        .feedback-grid textarea:focus {
+            border-color: var(--verde-medio);
+            outline: none;
+        }
+        .feedback-grid textarea:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .feedback-grid label {
+            font-weight: 600;
+            color: var(--verde-escuro);
+            display: block;
+            margin-bottom: 6px;
+            font-size: 14px;
+        }
+
+        .feedback-full {
+            margin: 15px 0;
+        }
+        .feedback-full textarea {
+            width: 100%;
+            min-height: 80px;
+            padding: 12px 15px;
+            border: 2px solid var(--verde-borda);
+            border-radius: 10px;
+            font-family: inherit;
+            font-size: 14px;
+            resize: vertical;
+            transition: border 0.2s;
+        }
+        .feedback-full textarea:focus {
+            border-color: var(--verde-medio);
+            outline: none;
+        }
+        .feedback-full textarea:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .feedback-full label {
+            font-weight: 600;
+            color: var(--verde-escuro);
+            display: block;
+            margin-bottom: 6px;
+            font-size: 14px;
+        }
+
+        .classificacao-select {
+            padding: 12px 20px;
+            border: 2px solid var(--verde-borda);
+            border-radius: 10px;
+            font-size: 15px;
+            background: white;
+            min-width: 250px;
+            cursor: pointer;
+        }
+        .classificacao-select:focus {
+            border-color: var(--verde-medio);
+            outline: none;
+        }
+        .classificacao-select:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* ===== ASSINATURA ===== */
+        .assinatura-area {
+            background: var(--verde-suave);
+            padding: 25px;
+            border-radius: 12px;
+            border: 2px solid var(--verde-borda);
+            margin: 20px 0;
+        }
+        .assinatura-area h4 {
+            color: var(--verde-escuro);
+            margin-bottom: 15px;
+        }
+        .assinatura-opcoes {
+            display: flex;
+            gap: 30px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .assinatura-opcoes label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 500;
+            color: #1a3a2a;
+            cursor: pointer;
+        }
+        .assinatura-opcoes input[type="radio"] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--verde-medio);
+            cursor: pointer;
+        }
+        .assinatura-opcoes input[type="radio"]:disabled {
+            cursor: not-allowed;
+        }
+        .assinatura-opcoes input[type="text"] {
+            padding: 10px 16px;
+            border: 2px solid var(--verde-borda);
+            border-radius: 8px;
+            font-size: 14px;
+            min-width: 200px;
+            flex: 1;
+            transition: border 0.3s;
+        }
+        .assinatura-opcoes input[type="text"]:focus {
+            border-color: var(--verde-medio);
+            outline: none;
+        }
+        .assinatura-opcoes input[type="text"]:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .data-assinatura {
+            font-size: 14px;
+            color: #4a6a5a;
+        }
+
+        /* ===== BOTÕES ===== */
+        .btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 2px solid var(--verde-borda);
+        }
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 30px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-primary {
+            background: var(--verde-medio);
+            color: white;
+        }
+        .btn-primary:hover {
+            background: var(--verde-escuro);
+            transform: scale(1.02);
+        }
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+        .btn-secondary {
+            background: #e0ece0;
+            color: var(--verde-escuro);
+        }
+        .btn-secondary:hover {
+            background: #c8dcc8;
+        }
+        .btn-secondary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .btn-success {
+            background: #1a7a3a;
+            color: white;
+        }
+        .btn-success:hover {
+            background: #0f5a2a;
+            transform: scale(1.02);
+        }
+        .btn-success:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+        .btn-pdf {
+            background: #c0392b;
+            color: white;
+        }
+        .btn-pdf:hover {
+            background: #a93226;
+            transform: scale(1.02);
+        }
+        .btn-pdf:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+        .btn-sharepoint {
+            background: var(--azul-microsoft);
+            color: white;
+        }
+        .btn-sharepoint:hover {
+            background: #005a9e;
+            transform: scale(1.02);
+        }
+        .btn-outline {
+            background: transparent;
+            color: var(--verde-escuro);
+            border: 2px solid var(--verde-borda);
+        }
+        .btn-outline:hover {
+            background: var(--verde-suave);
+        }
+        .btn-microsoft {
+            background: var(--azul-microsoft);
+            color: white;
+        }
+        .btn-microsoft:hover {
+            background: #005a9e;
+            transform: scale(1.02);
+        }
+
+        .status-msg {
+            padding: 12px 18px;
+            border-radius: 10px;
+            margin-top: 12px;
+            font-weight: 500;
+        }
+        .status-success {
+            background: #d4edda;
+            color: #0b5e3a;
+            border: 1px solid #a3cfb0;
+        }
+        .status-error {
+            background: #f8d7da;
+            color: #7a2a2a;
+            border: 1px solid #f0b8b8;
+        }
+        .status-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .status-warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffc107;
+        }
+
+        /* ===== PAINEL RH ===== */
+        .rh-filtros {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: var(--verde-suave);
+            border-radius: 12px;
+            border: 1px solid var(--verde-borda);
+        }
+        .rh-filtros input, .rh-filtros select {
+            padding: 10px 16px;
+            border: 2px solid var(--verde-borda);
+            border-radius: 8px;
+            font-size: 14px;
+            background: white;
+            flex: 1;
+            min-width: 150px;
+        }
+        .rh-filtros input:focus, .rh-filtros select:focus {
+            border-color: var(--verde-medio);
+            outline: none;
+        }
+
+        .rh-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .rh-stat-card {
+            background: var(--verde-suave);
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid var(--verde-borda);
+        }
+        .rh-stat-card .numero {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--verde-escuro);
+        }
+        .rh-stat-card .label {
+            font-size: 13px;
+            color: #5a7a6a;
+        }
+
+        .rh-tabela-wrapper {
+            overflow-x: auto;
+            max-height: 500px;
+            overflow-y: auto;
+            border-radius: 12px;
+            border: 1px solid var(--verde-borda);
+        }
+        .rh-tabela {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        .rh-tabela th {
+            background: var(--verde-escuro);
+            color: white;
+            padding: 10px 12px;
+            text-align: left;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            white-space: nowrap;
+        }
+        .rh-tabela td {
+            padding: 8px 12px;
+            border-bottom: 1px solid #e8f0e8;
+            vertical-align: top;
+        }
+        .rh-tabela tr:hover {
+            background: #f8fcf8;
+        }
+        .rh-tabela .status-badge {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .rh-tabela .status-badge.concluido {
+            background: #d4edda;
+            color: #0b5e3a;
+        }
+        .rh-tabela .status-badge.pendente {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .rh-export-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 15px 0;
+        }
+        .rh-export-buttons .btn {
+            font-size: 13px;
+            padding: 8px 20px;
+        }
+
+        /* ===== LOGIN ===== */
+        #loginPage {
+            max-width: 520px;
+            text-align: center;
+            margin: 40px auto;
+        }
+        #loginPage .logo-placeholder {
+            font-size: 28px;
+            padding: 15px 30px;
+            display: inline-block;
+            margin-bottom: 15px;
+        }
+        #loginPage h1 {
+            font-size: 32px;
+            color: var(--verde-escuro);
+        }
+        #loginPage p {
+            color: #3a6a4a;
+            font-size: 16px;
+        }
+        #loginPage .login-box {
+            background: var(--verde-suave);
+            padding: 30px;
+            border-radius: 16px;
+            border: 2px solid var(--verde-borda);
+            margin-top: 20px;
+        }
+        .btn-microsoft-login {
+            width: 100%;
+            padding: 16px;
+            background: var(--azul-microsoft);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+        .btn-microsoft-login:hover {
+            background: #005a9e;
+            transform: scale(1.02);
+        }
+        .btn-microsoft-login img {
+            width: 24px;
+            height: 24px;
+        }
+        .login-loading {
+            display: none;
+            margin: 15px 0;
+        }
+        .login-loading .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--verde-borda);
+            border-top-color: var(--verde-medio);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 10px auto;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .login-error {
+            color: #b33;
+            margin-top: 10px;
+            font-weight: 500;
+            display: none;
+        }
+        .login-info {
+            color: #5a7a6a;
+            font-size: 13px;
+            margin-top: 15px;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid var(--verde-borda);
+            text-align: left;
+        }
+        .login-info strong {
+            color: var(--verde-escuro);
+        }
+
+        /* ===== SHAREPOINT CONFIG ===== */
+        .sp-config-area {
+            background: var(--verde-suave);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid var(--verde-borda);
+            margin: 15px 0;
+        }
+        .sp-config-area label {
+            font-weight: 600;
+            color: var(--verde-escuro);
+            display: block;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+        .sp-config-area input {
+            width: 100%;
+            padding: 10px 16px;
+            border: 2px solid var(--verde-borda);
+            border-radius: 8px;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        .sp-config-area input:focus {
+            border-color: var(--verde-medio);
+            outline: none;
+        }
+        .sp-config-area .hint {
+            font-size: 12px;
+            color: #5a7a6a;
+            margin-top: -5px;
+            margin-bottom: 10px;
+        }
+
+        /* ===== RESPONSIVIDADE ===== */
+        @media (max-width: 768px) {
+            .container { padding: 18px 16px; }
+            .header { flex-direction: column; align-items: stretch; text-align: center; }
+            .user-info { justify-content: center; flex-wrap: wrap; }
+            .intro-grid { grid-template-columns: 1fr; }
+            .feedback-grid { grid-template-columns: 1fr; }
+            .steps { flex-direction: column; border-radius: 16px; gap: 4px; }
+            .step-btn { max-width: 100%; text-align: center; padding: 10px; }
+            .competencia-row { flex-direction: column; align-items: stretch; }
+            .competencia-row select { width: 100%; }
+            .assinatura-opcoes { flex-direction: column; align-items: stretch; }
+            .btn-group { flex-direction: column; }
+            .btn-group .btn { justify-content: center; }
+            .avaliacao-header { flex-direction: column; gap: 8px; }
+            .pesquisa-area { flex-direction: column; align-items: stretch; }
+            .pesquisa-area input { width: 100%; }
+            .pesquisa-area .avaliador-nome { margin-left: 0; text-align: center; }
+            .msg-pesquisa { text-align: center; }
+            .rh-filtros { flex-direction: column; }
+            .tabs { flex-wrap: nowrap; overflow-x: auto; }
+            .tab-btn { padding: 10px 16px; font-size: 13px; }
+            .rh-stats { grid-template-columns: 1fr 1fr; }
+            #loginPage { padding: 0 10px; }
+        }
+
+        @media print {
+            .btn-group, .steps, .btn-calcular, .pesquisa-area, .progress-container,
+            .tabs, .rh-filtros, .rh-export-buttons, .rh-stats, .user-info {
+                display: none !important;
+            }
+            .container { box-shadow: none !important; padding: 10px !important; }
+            .page { display: block !important; }
+            .page:not(.active) { display: none !important; }
+            .tab-content { display: block !important; }
+            .tab-content:not(.active) { display: none !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ============================================================ -->
+    <!-- ========== PÁGINA DE LOGIN ========== -->
+    <!-- ============================================================ -->
+    <div class="container" id="loginPage">
+        <div class="logo-placeholder" style="font-size:32px; padding:15px 35px; display:inline-block; margin-bottom:15px;">
+            📋 Avaliação
+        </div>
+        <h1>Avaliação de Desempenho</h1>
+        <p style="font-size:18px; color:#3a6a4a;">Sistema integrado com Microsoft 365</p>
+        
+        <div class="login-box">
+            <p style="margin-bottom:20px; font-size:15px;">
+                🔐 Faça login com a sua conta <strong>Microsoft</strong> para continuar
+            </p>
+            
+            <button class="btn-microsoft-login" onclick="loginWithMicrosoft()">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                    <path d="M11.5 11.5H2.5V2.5H11.5V11.5Z" fill="#F25022"/>
+                    <path d="M21.5 11.5H12.5V2.5H21.5V11.5Z" fill="#7FBA00"/>
+                    <path d="M11.5 21.5H2.5V12.5H11.5V21.5Z" fill="#00A4EF"/>
+                    <path d="M21.5 21.5H12.5V12.5H21.5V21.5Z" fill="#FFB900"/>
+                </svg>
+                Entrar com Microsoft
+            </button>
+            
+            <div class="login-loading" id="loginLoading">
+                <div class="spinner"></div>
+                <p style="color:#5a7a6a; font-size:14px;">A autenticar...</p>
+            </div>
+            
+            <div class="login-error" id="loginError"></div>
+        </div>
+
+        <div class="login-info">
+            <p><strong>🔒 Informação de Segurança</strong></p>
+            <p style="font-size:13px; margin-top:5px;">
+                Este sistema utiliza autenticação Microsoft Entra ID (Azure AD). 
+                Apenas utilizadores autorizados da sua organização podem aceder.
+                Os dados são armazenados de forma segura no SharePoint.
+            </p>
+            <p style="font-size:12px; color:#5a7a6a; margin-top:10px;">
+                <strong>Funções:</strong>
+                <span style="display:inline-block; background:#d4edda; padding:1px 10px; border-radius:10px; margin-left:5px;">👤 Colaborador</span>
+                <span style="display:inline-block; background:#fff3cd; padding:1px 10px; border-radius:10px; margin-left:5px;">👔 RH</span>
+            </p>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- ========== PÁGINA PRINCIPAL ========== -->
+    <!-- ============================================================ -->
+    <div class="container" id="mainPage" style="display:none;">
+
+        <!-- ===== HEADER ===== -->
+        <div class="header">
+            <div class="logo-area">
+                <div class="logo-placeholder">📋 Avaliação</div>
+                <h1>Desempenho <span>| Microsoft 365</span></h1>
+            </div>
+            <div class="user-info" id="userInfo">
+                <div class="user-avatar" id="userAvatar">U</div>
+                <div>
+                    <div class="user-name" id="userName">Utilizador</div>
+                    <div class="user-role" id="userRole">Colaborador</div>
+                </div>
+                <div class="status-online">
+                    <span class="dot"></span>
+                    <span>Online</span>
+                </div>
+                <button class="btn-logout" onclick="logout()">Sair</button>
+            </div>
+        </div>
+
+        <!-- ===== ABAS ===== -->
+        <div class="tabs" id="mainTabs">
+            <button class="tab-btn active" onclick="switchTab('avaliacao')">
+                📝 Avaliação <span class="badge" id="badgeAvaliacao">1</span>
+            </button>
+            <button class="tab-btn" onclick="switchTab('rh')" id="tabRH">
+                📊 Painel RH <span class="badge" id="badgeRH">0</span>
+            </button>
+            <button class="tab-btn" onclick="switchTab('config')">
+                ⚙️ Configuração
+            </button>
+        </div>
+
+        <!-- ========================================================== -->
+        <!-- ========== ABA AVALIAÇÃO ========== -->
+        <!-- ========================================================== -->
+        <div class="tab-content active" id="tabAvaliacao">
+
+            <!-- ===== SELEÇÃO DO COLABORADOR ===== -->
+            <div class="pesquisa-area">
+                <label>👤 Avaliador:</label>
+                <span class="avaliador-nome" id="avaliadorNomeDisplay">-</span>
+                <label style="margin-left:15px;">🔍 ID do Colaborador:</label>
+                <input type="number" id="pesquisaID" placeholder="Ex: 101" min="1" />
+                <button class="btn-buscar" onclick="buscarColaborador()">🔍 Buscar</button>
+                <button class="btn-buscar" style="background:#6a8a7a;" onclick="limparBusca()">✖ Limpar</button>
+                <span class="msg-pesquisa" id="msgPesquisa"></span>
+            </div>
+
+            <!-- ===== BARRA DE PROGRESSO ===== -->
+            <div class="progress-container">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+
+            <!-- ===== STEPS ===== -->
+            <div class="steps">
+                <button class="step-btn active" onclick="mudarPagina(1)" id="step1">
+                    <span class="num">1</span> Introdução
+                </button>
+                <button class="step-btn" onclick="mudarPagina(2)" id="step2">
+                    <span class="num">2</span> Avaliação
+                </button>
+                <button class="step-btn" onclick="mudarPagina(3)" id="step3">
+                    <span class="num">3</span> Feedback
+                </button>
+            </div>
+
+            <!-- ========== PÁGINA 1 - INTRODUÇÃO ========== -->
+            <div class="page active" id="page1">
+                <h2 style="color:var(--verde-escuro);">📖 Introdução à Avaliação de Desempenho</h2>
+
+                <div class="intro-grid">
+                    <div class="intro-card">
+                        <h3>🎯 Objetivo</h3>
+                        <ul>
+                            <li>Monitorizar a performance do colaborador de forma objetiva</li>
+                            <li>Identificar e propor áreas de melhoria de desenvolvimento</li>
+                            <li>Acompanhar o crescimento profissional do colaborador</li>
+                            <li>Dar e receber feedback construtivo sobre a performance</li>
+                        </ul>
+                    </div>
+                    <div class="intro-card">
+                        <h3>👥 Público Alvo</h3>
+                        <ul>
+                            <li>Todos os colaboradores contratados há mais de 3 meses</li>
+                            <li>Todas as categorias de Operador, exceto Operadores Principais</li>
+                            <li>Operadores Principais são avaliados como Chefias</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="intro-card" style="border-left-color:var(--verde-claro);">
+                    <h3>📋 Metodologia</h3>
+                    <p>A ferramenta de avaliação é constituída por dois momentos distintos:</p>
+                    <ul style="margin-top:10px;">
+                        <li><strong>1. Ficha de Avaliação</strong> — Avaliação das competências atribuídas a cada função, de acordo com a escala predefinida.</li>
+                        <li><strong>2. Sessão de Feedback</strong> — Análise e discussão da performance. Momento para dar e receber feedback.</li>
+                    </ul>
+                </div>
+
+                <h3 style="color:var(--verde-escuro); margin-top:25px;">📚 Dicionário de Competências</h3>
+                <p style="color:#3a5a4a; margin-bottom:12px;">As competências são comportamentos observáveis que permitem avaliar a performance do colaborador.</p>
+
+                <div class="dicionario-item">
+                    <strong>🎯 Foco no Cliente</strong>
+                    <p>Proatividade com o cliente, satisfazendo as suas necessidades com compreensão, respeito e disponibilidade.</p>
+                </div>
+                <div class="dicionario-item">
+                    <strong>🤝 Compromisso com a Equipa</strong>
+                    <p>Facilidade de integração, espírito aberto para diálogo, partilha de conhecimento e experiências.</p>
+                </div>
+                <div class="dicionario-item">
+                    <strong>📚 Vontade de Aprender</strong>
+                    <p>Aplica os conhecimentos da empresa na sua função. Procura informação para melhorar o seu desempenho.</p>
+                </div>
+                <div class="dicionario-item">
+                    <strong>🏆 Orientação para Resultados</strong>
+                    <p>Atinge objetivos com rigor e eficácia. Identifica e procura soluções para problemas.</p>
+                </div>
+                <div class="dicionario-item">
+                    <strong>🧠 Análise e Resolução de Problemas</strong>
+                    <p>Analisa o problema identificando a informação mais relevante. Toma decisões adequadas.</p>
+                </div>
+                <div class="dicionario-item">
+                    <strong>🧹 Organização do Local de Trabalho</strong>
+                    <p>Garante arrumação, limpeza, higiene e manutenção da área de trabalho.</p>
+                </div>
+                <div class="dicionario-item">
+                    <strong>📦 Conhecimento do Produto</strong>
+                    <p>Conhecimento das características específicas dos produtos e sua localização.</p>
+                </div>
+                <div class="dicionario-item">
+                    <strong>💼 Dinâmica Comercial</strong>
+                    <p>Iniciativa para se dirigir e estabelecer contacto com o cliente. Orientação para venda.</p>
+                </div>
+                <div class="dicionario-item">
+                    <strong>⚙️ Conhecimento dos Processos de Trabalho</strong>
+                    <p>Detém e aplica o conhecimento técnico exigido para a sua área de trabalho.</p>
+                </div>
+
+                <div style="margin-top:25px; text-align:right;">
+                    <button class="btn btn-primary" id="btnAvancar1" onclick="mudarPagina(2)" disabled>⚠️ Selecione um colaborador primeiro</button>
+                </div>
+            </div>
+
+            <!-- ========== PÁGINA 2 - AVALIAÇÃO ========== -->
+            <div class="page" id="page2">
+                <h2 style="color:var(--verde-escuro);">📊 Ficha de Avaliação</h2>
+
+                <div class="avaliacao-header">
+                    <div class="campo">
+                        <label>ID</label>
+                        <span class="valor" id="avaliacaoID">-</span>
+                    </div>
+                    <div class="campo">
+                        <label>Funcionário</label>
+                        <span class="valor" id="avaliacaoNome">-</span>
+                    </div>
+                    <div class="campo">
+                        <label>Direcção</label>
+                        <span class="valor" id="avaliacaoDirecao">-</span>
+                    </div>
+                    <div class="campo">
+                        <label>Departamento</label>
+                        <span class="valor" id="avaliacaoDepartamento">-</span>
+                    </div>
+                    <div class="campo">
+                        <label>Função</label>
+                        <span class="valor" id="avaliacaoFuncao">-</span>
+                    </div>
+                    <div class="campo">
+                        <label>Data Admissão</label>
+                        <span class="valor" id="avaliacaoAdmissao">-</span>
+                    </div>
+                </div>
+
+                <p style="color:#3a5a4a; margin-bottom:15px;">
+                    <strong>Instrução:</strong> Assinale com o número correspondente à avaliação do colaborador em cada competência.
+                </p>
+
+                <div id="competenciasContainer"></div>
+
+                <div style="background:var(--verde-suave); padding:15px 20px; border-radius:10px; margin:15px 0; border:1px solid var(--verde-borda);">
+                    <strong style="color:var(--verde-escuro); display:block; margin-bottom:8px;">📊 Escala de Avaliação:</strong>
+                    <div style="display:flex; flex-wrap:wrap; gap:8px 15px; font-size:14px;">
+                        <span><span style="font-weight:700; color:#b33;">1</span> - Insuficiente</span>
+                        <span><span style="font-weight:700; color:#d48a3a;">2</span> - Parcial</span>
+                        <span><span style="font-weight:700; color:#2a6a8a;">3</span> - Atende Expectativas</span>
+                        <span><span style="font-weight:700; color:#1a8a4a;">4</span> - Supera Expectativas</span>
+                        <span><span style="font-weight:700; color:#0a5a2a;">5</span> - Excepcional</span>
+                    </div>
+                </div>
+
+                <button class="btn btn-calcular" id="btnCalcular" onclick="calcularResultado()" disabled>📈 Calcular Resultado</button>
+
+                <div id="resultadoFinal" class="resultado-box"></div>
+
+                <div style="margin-top:15px;">
+                    <label style="font-weight:600; color:var(--verde-escuro);">Comentário Adicional</label>
+                    <textarea id="comentarioAdicional" style="width:100%; min-height:70px; padding:12px; border:2px solid var(--verde-borda); border-radius:10px; font-family:inherit; font-size:14px; resize:vertical;" disabled></textarea>
+                </div>
+
+                <div style="margin-top:25px; display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px;">
+                    <button class="btn btn-secondary" onclick="mudarPagina(1)">← Voltar</button>
+                    <button class="btn btn-primary" id="btnAvancar2" onclick="validarEAvançar()" disabled>⚠️ Selecione um colaborador primeiro</button>
+                </div>
+            </div>
+
+            <!-- ========== PÁGINA 3 - FEEDBACK ========== -->
+            <div class="page" id="page3">
+                <h2 style="color:var(--verde-escuro);">💬 Sessão de Feedback</h2>
+
+                <div class="avaliacao-header" style="background:#f0f8f0;">
+                    <div class="campo">
+                        <label>Colaborador</label>
+                        <span class="valor" id="feedbackNome">-</span>
+                    </div>
+                    <div class="campo">
+                        <label>Função</label>
+                        <span class="valor" id="feedbackFuncao">-</span>
+                    </div>
+                    <div class="campo">
+                        <label>Data Avaliação</label>
+                        <span class="valor" id="feedbackData">-</span>
+                    </div>
+                </div>
+
+                <h3 style="color:var(--verde-escuro); margin-top:20px;">1. Análise dos Aspectos mais significativos</h3>
+
+                <div class="feedback-grid">
+                    <div>
+                        <label>✅ Pontos Fortes <span style="font-weight:400; color:#5a7a6a;">(o que foi bem feito)</span></label>
+                        <textarea id="feedbackFortes" placeholder="Descreva os pontos fortes do colaborador..." disabled></textarea>
+                    </div>
+                    <div>
+                        <label>🔄 Pontos a Desenvolver <span style="font-weight:400; color:#5a7a6a;">(o que pode ser melhorado)</span></label>
+                        <textarea id="feedbackMelhorar" placeholder="Descreva os pontos a desenvolver..." disabled></textarea>
+                    </div>
+                </div>
+
+                <h3 style="color:var(--verde-escuro); margin-top:25px;">2. Avaliação Global</h3>
+
+                <div class="feedback-full">
+                    <label>📝 Feedback do Avaliador</label>
+                    <textarea id="feedbackGlobal" placeholder="Análise geral do desempenho do colaborador..." disabled></textarea>
+                </div>
+
+                <div class="feedback-full">
+                    <label>🚀 Desenvolvimento de Carreira</label>
+                    <textarea id="feedbackCarreira" placeholder="Sugestões para o crescimento profissional..." disabled></textarea>
+                </div>
+
+                <h3 style="color:var(--verde-escuro); margin-top:25px;">🎯 Objetivos para o Próximo Período</h3>
+                <div class="feedback-full">
+                    <label>📋 Metas e Objetivos</label>
+                    <textarea id="feedbackObjetivos" placeholder="Defina objetivos claros para o próximo período de avaliação..." disabled></textarea>
+                </div>
+
+                <h3 style="color:var(--verde-escuro); margin-top:25px;">🏷️ Classificação Final</h3>
+                <select id="classificacaoFinal" class="classificacao-select" disabled>
+                    <option value="1">1 - Abaixo das Expectativas</option>
+                    <option value="2" selected>2 - De acordo com as Expectativas</option>
+                    <option value="3">3 - Acima das Expectativas</option>
+                </select>
+
+                <div class="assinatura-area">
+                    <h4>✍️ Assinatura do Colaborador</h4>
+                    <div class="assinatura-opcoes">
+                        <label>
+                            <input type="radio" name="concordancia" value="concordo" checked disabled />
+                            ✅ Concordo com a avaliação
+                        </label>
+                        <label>
+                            <input type="radio" name="concordancia" value="naoconcordo" disabled />
+                            ❌ Não concordo com a avaliação
+                        </label>
+                        <label style="flex:1; min-width:150px;">
+                            Nome do Colaborador:
+                            <input type="text" id="nomeAssinatura" placeholder="Nome completo" disabled />
+                        </label>
+                        <span class="data-assinatura" id="dataAssinatura"></span>
+                    </div>
+                </div>
+
+                <div class="status-msg" id="statusFeedback"></div>
+
+                <div class="btn-group">
+                    <button class="btn btn-secondary" onclick="mudarPagina(2)" id="btnVoltar2" disabled>← Voltar à Avaliação</button>
+                    <button class="btn btn-success" id="btnSalvar" onclick="salvarAvaliacao()" disabled>💾 Salvar no SharePoint</button>
+                    <button class="btn btn-pdf" id="btnPDF" onclick="exportarPDF()" disabled>📄 Exportar PDF</button>
+                    <button class="btn btn-outline" id="btnNova" onclick="novaAvaliacao()" disabled>🔄 Nova Avaliação</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================================== -->
+        <!-- ========== ABA PAINEL RH ========== -->
+        <!-- ========================================================== -->
+        <div class="tab-content" id="tabRH">
+            <h2 style="color:var(--verde-escuro);">📊 Painel de Avaliações - RH</h2>
+            <p style="color:#3a5a4a; margin-bottom:15px;">
+                Visualize todas as avaliações realizadas. Os dados são sincronizados com o SharePoint.
+            </p>
+
+            <div class="rh-stats" id="rhStats">
+                <div class="rh-stat-card">
+                    <div class="numero" id="statTotal">0</div>
+                    <div class="label">Total Avaliações</div>
+                </div>
+                <div class="rh-stat-card">
+                    <div class="numero" id="statHoje">0</div>
+                    <div class="label">Hoje</div>
+                </div>
+                <div class="rh-stat-card">
+                    <div class="numero" id="statMedia">0</div>
+                    <div class="label">Média Geral</div>
+                </div>
+                <div class="rh-stat-card">
+                    <div class="numero" id="statAvaliadores">0</div>
+                    <div class="label">Avaliadores</div>
+                </div>
+            </div>
+
+            <div class="rh-filtros">
+                <input type="text" id="rhFiltroNome" placeholder="🔍 Filtrar por nome..." oninput="filtrarRH()" />
+                <select id="rhFiltroDepartamento" onchange="filtrarRH()">
+                    <option value="">Todos os Departamentos</option>
+                </select>
+                <select id="rhFiltroClassificacao" onchange="filtrarRH()">
+                    <option value="">Todas as Classificações</option>
+                    <option value="1">1 - Abaixo das Expectativas</option>
+                    <option value="2">2 - De acordo com as Expectativas</option>
+                    <option value="3">3 - Acima das Expectativas</option>
+                </select>
+                <button class="btn btn-primary" onclick="carregarAvaliacoesRH()" style="padding:8px 20px; border-radius:8px;">
+                    🔄 Atualizar
+                </button>
+            </div>
+
+            <div class="rh-export-buttons">
+                <button class="btn btn-sharepoint" onclick="exportarParaSharePoint()">📤 Exportar para SharePoint</button>
+                <button class="btn btn-pdf" onclick="exportarRH_PDF()">📄 Exportar Relatório PDF</button>
+                <button class="btn btn-secondary" onclick="exportarRH_Excel()">📊 Exportar Excel (CSV)</button>
+            </div>
+
+            <div class="rh-tabela-wrapper">
+                <table class="rh-tabela">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Data</th>
+                            <th>Colaborador</th>
+                            <th>Função</th>
+                            <th>Departamento</th>
+                            <th>Avaliador</th>
+                            <th>Resultado</th>
+                            <th>Classificação</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="rhTabelaBody">
+                        <tr>
+                            <td colspan="9" style="text-align:center; padding:30px; color:#5a7a6a;">
+                                📭 Nenhuma avaliação encontrada. <br>
+                                <span style="font-size:13px;">Carregue em "Atualizar" para sincronizar com o SharePoint.</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ========================================================== -->
+        <!-- ========== ABA CONFIGURAÇÃO ========== -->
+        <!-- ========================================================== -->
+        <div class="tab-content" id="tabConfig">
+            <h2 style="color:var(--verde-escuro);">⚙️ Configuração</h2>
+            <p style="color:#3a5a4a; margin-bottom:15px;">
+                Configure a integração com o SharePoint e outras definições.
+            </p>
+
+            <div class="sp-config-area">
+                <label>📍 Site do SharePoint</label>
+                <input type="text" id="spSiteUrl" placeholder="https://suaempresa.sharepoint.com/sites/Avaliacoes" />
+                <div class="hint">URL do site SharePoint onde as avaliações serão armazenadas</div>
+
+                <label>📁 Lista/Biblioteca</label>
+                <input type="text" id="spListName" placeholder="Avaliacoes" value="Avaliacoes" />
+                <div class="hint">Nome da lista ou biblioteca de documentos para armazenar os dados</div>
+
+                <button class="btn btn-sharepoint" onclick="salvarConfiguracao()" style="margin-top:10px;">
+                    💾 Salvar Configuração
+                </button>
+            </div>
+
+            <div class="sp-config-area" style="margin-top:15px;">
+                <h4 style="color:var(--verde-escuro); margin-bottom:10px;">📊 Dados Locais</h4>
+                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                    <button class="btn btn-secondary" onclick="exportarDadosLocal()">📥 Exportar Dados Locais (JSON)</button>
+                    <button class="btn btn-secondary" onclick="importarDadosLocal()">📤 Importar Dados Locais</button>
+                    <button class="btn btn-danger" onclick="limparDadosLocal()" style="background:#b33; color:white;">🗑️ Limpar Dados Locais</button>
+                </div>
+                <div style="margin-top:10px; font-size:13px; color:#5a7a6a;">
+                    <span id="localStorageInfo">0 avaliações guardadas localmente</span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // ================================================================
+        //  CONFIGURAÇÃO DA AUTENTICAÇÃO MICROSOFT
+        // ================================================================
+        // ATENÇÃO: Substitua estes valores pelos da sua aplicação registada no Azure AD
+        const msalConfig = {
+            auth: {
+                clientId: "SEU_CLIENT_ID_AQUI", // Substituir pelo Client ID da app no Azure AD
+                authority: "https://login.microsoftonline.com/SEU_TENANT_ID_AQUI", // Substituir pelo Tenant ID
+                redirectUri: window.location.origin + window.location.pathname,
+                postLogoutRedirectUri: window.location.origin + window.location.pathname,
+            },
+            cache: {
+                cacheLocation: "sessionStorage",
+                storeAuthStateInCookie: false,
+            }
+        };
+
+        const loginRequest = {
+            scopes: ["User.Read", "Sites.ReadWrite.All", "Files.ReadWrite.All"]
+        };
+
+        // ================================================================
+        //  INICIALIZAÇÃO
+        // ================================================================
+        let msalInstance = null;
+        let currentUser = null;
+        let userRole = "colaborador"; // 'colaborador' ou 'rh'
+        let avaliacoesStorage = [];
+        let colaboradorAtual = null;
+        let colaboradorIDAtual = null;
+        let resultadoCalculado = null;
+        let colaboradorCarregado = false;
+        let colaboradorJaAvaliado = false;
+
+        // ================================================================
+        //  BASE DE DADOS - COLABORADORES (EXEMPLO)
+        // ================================================================
+        const colaboradores = {
+            "10": { "nome": "ALBERTO TANGU SIMAO", "direcao": "Lubango", "departamento": "Departamento PF",
+                "funcao": "Gerente de Departamento", "dataAdmissao": "2010-12-01" },
+            "101": { "nome": "ANA AUGUSTO PASCOAL MONTEIRO", "direcao": "Kilamba", "departamento": "Gastronomia",
+                "funcao": "Operador de Loja", "dataAdmissao": "2012-06-04" },
+            "1014": { "nome": "AURIO MORENO DOMINGOS FRANCISCO", "direcao": "Morro Bento", "departamento": "Frente de Loja",
+                "funcao": "Responsável Operacional Frente Loja", "dataAdmissao": "2022-07-04" },
+            // ... adicione todos os colaboradores que você tem
+        };
+
+        // ================================================================
+        //  COMPETÊNCIAS
+        // ================================================================
+        const competencias = [
+            { id: 1, nome: "Foco no Cliente", peso: 0.10 },
+            { id: 2, nome: "Compromisso com a Equipa", peso: 0.10 },
+            { id: 3, nome: "Vontade de Aprender", peso: 0.10 },
+            { id: 4, nome: "Orientação para Resultados", peso: 0.10 },
+            { id: 5, nome: "Análise e Resolução de Problemas", peso: 0.05 },
+            { id: 6, nome: "Organização do Local de Trabalho", peso: 0.10 },
+            { id: 7, nome: "Conhecimento do Produto", peso: 0.15 },
+            { id: 8, nome: "Dinâmica Comercial", peso: 0.10 },
+            { id: 9, nome: "Conhecimento dos Processos de Trabalho", peso: 0.20 }
+        ];
+
+        // ================================================================
+        //  AUTENTICAÇÃO MICROSOFT
+        // ================================================================
+        async function loginWithMicrosoft() {
+            const loading = document.getElementById('loginLoading');
+            const errorDiv = document.getElementById('loginError');
+            
+            loading.style.display = 'block';
+            errorDiv.style.display = 'none';
+            errorDiv.textContent = '';
+
+            try {
+                // Inicializar MSAL
+                msalInstance = new msal.PublicClientApplication(msalConfig);
+                await msalInstance.initialize();
+
+                // Tentar login interativo
+                const response = await msalInstance.loginPopup(loginRequest);
+                
+                if (response.account) {
+                    currentUser = response.account;
+                    
+                    // Verificar se o utilizador é RH (pode ser baseado em grupo ou email)
+                    // Para simplificar, vamos verificar se o email contém "rh" ou "admin"
+                    const email = currentUser.username || currentUser.email || '';
+                    userRole = (email.toLowerCase().includes('rh') || 
+                               email.toLowerCase().includes('admin') || 
+                               email.toLowerCase().includes('hr')) ? 'rh' : 'colaborador';
+
+                    // Carregar dados
+                    await carregarDadosIniciais();
+                    
+                    // Mostrar página principal
+                    document.getElementById('loginPage').style.display = 'none';
+                    document.getElementById('mainPage').style.display = 'block';
+                    
+                    // Atualizar interface
+                    atualizarInterfaceUsuario();
+                    
+                    // Se for RH, mostrar a aba RH
+                    if (userRole === 'rh') {
+                        document.getElementById('tabRH').style.display = 'inline-block';
+                        document.getElementById('badgeRH').textContent = await contarAvaliacoes();
+                        // Carregar avaliações
+                        await carregarAvaliacoesRH();
+                    } else {
+                        document.getElementById('tabRH').style.display = 'none';
+                    }
+
+                    // Renderizar competências
+                    renderizarCompetenciasVazias();
+                    
+                    // Mostrar mensagem de boas-vindas
+                    mostrarStatus('statusFeedback', `✅ Bem-vindo, ${currentUser.name || currentUser.username}!`, 'success');
+                }
+            } catch (error) {
+                console.error('Erro no login:', error);
+                errorDiv.style.display = 'block';
+                errorDiv.textContent = `❌ Erro ao autenticar: ${error.message || 'Tente novamente.'}`;
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        // ================================================================
+        //  FUNÇÕES DE INTERFACE
+        // ================================================================
+        function atualizarInterfaceUsuario() {
+            const nome = currentUser.name || currentUser.username || 'Utilizador';
+            const iniciais = nome.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+            
+            document.getElementById('userName').textContent = nome;
+            document.getElementById('userAvatar').textContent = iniciais;
+            document.getElementById('userRole').textContent = userRole === 'rh' ? '👔 RH' : '👤 Colaborador';
+            document.getElementById('avaliadorNomeDisplay').textContent = nome;
+            
+            // Atualizar badge
+            document.getElementById('badgeAvaliacao').textContent = '1';
+        }
+
+        function mostrarStatus(elementId, mensagem, tipo = 'info') {
+            const el = document.getElementById(elementId);
+            if (!el) return;
+            el.className = `status-msg status-${tipo}`;
+            el.innerHTML = mensagem;
+        }
+
+        // ================================================================
+        //  CARREGAR DADOS INICIAIS
+        // ================================================================
+        async function carregarDadosIniciais() {
+            // Carregar avaliações do localStorage (cache local)
+            const saved = localStorage.getItem('avaliacoes_' + (currentUser?.username || 'default'));
+            if (saved) {
+                try {
+                    avaliacoesStorage = JSON.parse(saved);
+                } catch (e) {
+                    avaliacoesStorage = [];
+                }
+            } else {
+                avaliacoesStorage = [];
+            }
+            
+            // Tentar carregar do SharePoint (se configurado)
+            await carregarDoSharePoint();
+            
+            atualizarInfoLocal();
+        }
+
+        function atualizarInfoLocal() {
+            const info = document.getElementById('localStorageInfo');
+            if (info) {
+                info.textContent = `${avaliacoesStorage.length} avaliações guardadas localmente`;
+            }
+        }
+
+        // ================================================================
+        //  INTEGRAÇÃO COM SHAREPOINT
+        // ================================================================
+        async function carregarDoSharePoint() {
+            try {
+                const siteUrl = localStorage.getItem('spSiteUrl');
+                const listName = localStorage.getItem('spListName') || 'Avaliacoes';
+                
+                if (!siteUrl || !msalInstance || !currentUser) {
+                    return;
+                }
+
+                // Obter token de acesso
+                const tokenResponse = await msalInstance.acquireTokenSilent({
+                    scopes: ["Sites.ReadWrite.All"],
+                    account: currentUser
+                });
+
+                // Fazer requisição para SharePoint
+                const response = await fetch(`${siteUrl}/_api/web/lists/getbytitle('${listName}')/items`, {
+                    headers: {
+                        'Authorization': `Bearer ${tokenResponse.accessToken}`,
+                        'Accept': 'application/json;odata=verbose'
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    // Processar dados do SharePoint
+                    // (implementação depende da estrutura da lista)
+                }
+            } catch (error) {
+                console.log('Erro ao carregar do SharePoint:', error);
+                // Não falha, continua com dados locais
+            }
+        }
+
+        async function salvarNoSharePoint(dados) {
+            try {
+                const siteUrl = localStorage.getItem('spSiteUrl');
+                const listName = localStorage.getItem('spListName') || 'Avaliacoes';
+                
+                if (!siteUrl) {
+                    // Fallback para localStorage
+                    salvarLocal(dados);
+                    return { success: true, local: true };
+                }
+
+                // Obter token
+                const tokenResponse = await msalInstance.acquireTokenSilent({
+                    scopes: ["Sites.ReadWrite.All"],
+                    account: currentUser
+                });
+
+                // Criar item na lista do SharePoint
+                const itemData = {
+                    '__metadata': { 'type': `SP.Data.${listName}ListItem` },
+                    'Title': dados.colaborador.nome,
+                    'ColaboradorID': dados.colaborador.id,
+                    'Avaliador': dados.avaliador,
+                    'DataAvaliacao': dados.dataAvaliacao,
+                    'Resultado': dados.resultado,
+                    'Classificacao': dados.classificacaoFinal,
+                    'Departamento': dados.colaborador.departamento,
+                    'Funcao': dados.colaborador.funcao,
+                    'Feedback': JSON.stringify(dados.feedback),
+                    'Competencias': JSON.stringify(dados.competencias),
+                    'Assinatura': JSON.stringify(dados.assinatura)
+                };
+
+                const response = await fetch(`${siteUrl}/_api/web/lists/getbytitle('${listName}')/items`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${tokenResponse.accessToken}`,
+                        'Accept': 'application/json;odata=verbose',
+                        'Content-Type': 'application/json;odata=verbose'
+                    },
+                    body: JSON.stringify(itemData)
+                });
+
+                if (response.ok) {
+                    return { success: true, sharepoint: true };
+                } else {
+                    // Fallback para localStorage
+                    salvarLocal(dados);
+                    return { success: true, local: true, error: await response.text() };
+                }
+            } catch (error) {
+                console.error('Erro ao salvar no SharePoint:', error);
+                // Fallback
+                salvarLocal(dados);
+                return { success: true, local: true, error: error.message };
+            }
+        }
+
+        function salvarLocal(dados) {
+            const key = 'avaliacoes_' + (currentUser?.username || 'default');
+            // Verificar duplicado
+            const existe = avaliacoesStorage.some(av => 
+                av.colaborador.id === dados.colaborador.id && 
+                av.dataAvaliacao === dados.dataAvaliacao
+            );
+            
+            if (!existe) {
+                avaliacoesStorage.push(dados);
+                localStorage.setItem(key, JSON.stringify(avaliacoesStorage));
+                atualizarInfoLocal();
+            }
+        }
+
+        // ================================================================
+        //  FUNÇÕES DE AVALIAÇÃO
+        // ================================================================
+        function renderizarCompetenciasVazias() {
+            const container = document.getElementById('competenciasContainer');
+            container.innerHTML = '';
+            competencias.forEach((comp, index) => {
+                const div = document.createElement('div');
+                div.className = 'competencia-row';
+                div.innerHTML = `
+                    <span class="nome">${index+1}. ${comp.nome}</span>
+                    <span class="peso">Peso: ${comp.peso * 100}%</span>
+                    <select id="nota_${comp.id}" disabled>
+                        <option value="">Selecione</option>
+                        <option value="1">1 - Insuficiente</option>
+                        <option value="2">2 - Parcial</option>
+                        <option value="3" selected>3 - Atende Expectativas</option>
+                        <option value="4">4 - Supera Expectativas</option>
+                        <option value="5">5 - Excepcional</option>
+                    </select>
+                    <span class="status-indicator" id="status_${comp.id}">⚪</span>
+                    <span class="resultado" id="resultado_${comp.id}"></span>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function renderizarCompetencias() {
+            const container = document.getElementById('competenciasContainer');
+            container.innerHTML = '';
+            
+            const habilitado = colaboradorCarregado && !colaboradorJaAvaliado;
+            
+            competencias.forEach((comp, index) => {
+                const div = document.createElement('div');
+                div.className = 'competencia-row';
+                div.innerHTML = `
+                    <span class="nome">${index+1}. ${comp.nome}</span>
+                    <span class="peso">Peso: ${comp.peso * 100}%</span>
+                    <select id="nota_${comp.id}" ${habilitado ? '' : 'disabled'}>
+                        <option value="">Selecione</option>
+                        <option value="1">1 - Insuficiente</option>
+                        <option value="2">2 - Parcial</option>
+                        <option value="3" selected>3 - Atende Expectativas</option>
+                        <option value="4">4 - Supera Expectativas</option>
+                        <option value="5">5 - Excepcional</option>
+                    </select>
+                    <span class="status-indicator" id="status_${comp.id}">⚪</span>
+                    <span class="resultado" id="resultado_${comp.id}"></span>
+                `;
+                container.appendChild(div);
+                
+                if (habilitado) {
+                    const select = document.getElementById(`nota_${comp.id}`);
+                    select.addEventListener('change', function() {
+                        const status = document.getElementById(`status_${comp.id}`);
+                        status.textContent = this.value ? '✅' : '⚪';
+                    });
+                }
+            });
+            
+            document.getElementById('btnCalcular').disabled = !habilitado;
+        }
+
+        // ================================================================
+        //  BUSCAR COLABORADOR
+        // ================================================================
+        function buscarColaborador() {
+            const input = document.getElementById('pesquisaID');
+            const id = parseInt(input.value.trim());
+            const msg = document.getElementById('msgPesquisa');
+            
+            msg.className = 'msg-pesquisa';
+            msg.textContent = '';
+            
+            if (!id || isNaN(id) || id <= 0) {
+                msg.className = 'msg-pesquisa erro';
+                msg.textContent = '⚠️ Por favor, insira um ID válido.';
+                return;
+            }
+            
+            if (!colaboradores[id]) {
+                msg.className = 'msg-pesquisa erro';
+                msg.textContent = `❌ ID ${id} não encontrado.`;
+                return;
+            }
+            
+            colaboradorIDAtual = id;
+            colaboradorAtual = colaboradores[id];
+            
+            // Verificar se já foi avaliado hoje
+            verificarAvaliacaoExistente();
+            
+            if (colaboradorJaAvaliado) {
+                msg.className = 'msg-pesquisa aviso';
+                msg.textContent = `⚠️ ${colaboradorAtual.nome} já foi avaliado hoje!`;
+                habilitarCampos(false);
+                return;
+            }
+            
+            msg.className = 'msg-pesquisa sucesso';
+            msg.textContent = `✅ ${colaboradorAtual.nome} (ID: ${id})`;
+            
+            // Atualizar dados
+            document.getElementById('avaliacaoID').textContent = id;
+            document.getElementById('avaliacaoNome').textContent = colaboradorAtual.nome;
+            document.getElementById('avaliacaoDirecao').textContent = colaboradorAtual.direcao;
+            document.getElementById('avaliacaoDepartamento').textContent = colaboradorAtual.departamento;
+            document.getElementById('avaliacaoFuncao').textContent = colaboradorAtual.funcao;
+            document.getElementById('avaliacaoAdmissao').textContent = colaboradorAtual.dataAdmissao;
+            
+            document.getElementById('feedbackNome').textContent = colaboradorAtual.nome;
+            document.getElementById('feedbackFuncao').textContent = colaboradorAtual.funcao;
+            document.getElementById('feedbackData').textContent = new Date().toISOString().split('T')[0];
+            document.getElementById('dataAssinatura').textContent = 'Data: ' + new Date().toISOString().split('T')[0];
+            document.getElementById('nomeAssinatura').value = colaboradorAtual.nome;
+            
+            // Limpar campos
+            document.getElementById('feedbackFortes').value = '';
+            document.getElementById('feedbackMelhorar').value = '';
+            document.getElementById('feedbackGlobal').value = '';
+            document.getElementById('feedbackCarreira').value = '';
+            document.getElementById('feedbackObjetivos').value = '';
+            document.getElementById('comentarioAdicional').value = '';
+            document.getElementById('classificacaoFinal').value = '2';
+            document.querySelector('input[name="concordancia"][value="concordo"]').checked = true;
+            
+            document.getElementById('resultadoFinal').className = 'resultado-box';
+            document.getElementById('resultadoFinal').style.display = 'none';
+            document.getElementById('statusFeedback').innerHTML = '';
+            document.getElementById('statusFeedback').className = 'status-msg';
+            resultadoCalculado = null;
+            
+            colaboradorCarregado = true;
+            renderizarCompetencias();
+            habilitarCampos(true);
+            
+            mudarPagina(1);
+            document.getElementById('btnAvancar1').innerHTML = 'Avançar para Avaliação →';
+            document.getElementById('btnAvancar1').disabled = false;
+        }
+
+        function verificarAvaliacaoExistente() {
+            if (!colaboradorIDAtual) {
+                colaboradorJaAvaliado = false;
+                return;
+            }
+            
+            const hoje = new Date().toISOString().split('T')[0];
+            const existe = avaliacoesStorage.some(av => 
+                av.colaborador.id === colaboradorIDAtual && 
+                av.dataAvaliacao === hoje
+            );
+            
+            colaboradorJaAvaliado = existe;
+            return existe;
+        }
+
+        function habilitarCampos(habilitado) {
+            colaboradorCarregado = habilitado;
+            
+            const selects = document.querySelectorAll('#competenciasContainer select');
+            selects.forEach(s => s.disabled = !habilitado);
+            
+            document.getElementById('comentarioAdicional').disabled = !habilitado;
+            document.getElementById('btnCalcular').disabled = !habilitado;
+            
+            document.getElementById('feedbackFortes').disabled = !habilitado;
+            document.getElementById('feedbackMelhorar').disabled = !habilitado;
+            document.getElementById('feedbackGlobal').disabled = !habilitado;
+            document.getElementById('feedbackCarreira').disabled = !habilitado;
+            document.getElementById('feedbackObjetivos').disabled = !habilitado;
+            document.getElementById('classificacaoFinal').disabled = !habilitado;
+            document.getElementById('nomeAssinatura').disabled = !habilitado;
+            document.querySelectorAll('input[name="concordancia"]').forEach(r => r.disabled = !habilitado);
+            
+            document.getElementById('btnSalvar').disabled = !habilitado || colaboradorJaAvaliado;
+            document.getElementById('btnPDF').disabled = !habilitado;
+            document.getElementById('btnNova').disabled = !habilitado;
+            document.getElementById('btnVoltar2').disabled = !habilitado;
+            
+            const btnAvancar1 = document.getElementById('btnAvancar1');
+            const btnAvancar2 = document.getElementById('btnAvancar2');
+            
+            if (habilitado) {
+                btnAvancar1.innerHTML = 'Avançar para Avaliação →';
+                btnAvancar1.disabled = false;
+                
+                if (colaboradorJaAvaliado) {
+                    btnAvancar2.innerHTML = '⚠️ Já avaliado!';
+                    btnAvancar2.disabled = true;
+                    document.getElementById('btnCalcular').disabled = true;
+                } else {
+                    btnAvancar2.innerHTML = 'Avançar para Feedback →';
+                    btnAvancar2.disabled = false;
+                }
+            } else {
+                btnAvancar1.innerHTML = '⚠️ Selecione um colaborador primeiro';
+                btnAvancar1.disabled = true;
+                btnAvancar2.innerHTML = '⚠️ Selecione um colaborador primeiro';
+                btnAvancar2.disabled = true;
+            }
+        }
+
+        function limparBusca() {
+            document.getElementById('pesquisaID').value = '';
+            document.getElementById('pesquisaID').focus();
+            
+            const msg = document.getElementById('msgPesquisa');
+            msg.className = 'msg-pesquisa';
+            msg.textContent = '';
+            
+            colaboradorAtual = null;
+            colaboradorIDAtual = null;
+            colaboradorCarregado = false;
+            colaboradorJaAvaliado = false;
+            
+            document.getElementById('avaliacaoID').textContent = '-';
+            document.getElementById('avaliacaoNome').textContent = '-';
+            document.getElementById('avaliacaoDirecao').textContent = '-';
+            document.getElementById('avaliacaoDepartamento').textContent = '-';
+            document.getElementById('avaliacaoFuncao').textContent = '-';
+            document.getElementById('avaliacaoAdmissao').textContent = '-';
+            document.getElementById('feedbackNome').textContent = '-';
+            document.getElementById('feedbackFuncao').textContent = '-';
+            
+            document.getElementById('resultadoFinal').className = 'resultado-box';
+            document.getElementById('resultadoFinal').style.display = 'none';
+            document.getElementById('statusFeedback').innerHTML = '';
+            document.getElementById('statusFeedback').className = 'status-msg';
+            resultadoCalculado = null;
+            
+            habilitarCampos(false);
+            renderizarCompetenciasVazias();
+            mudarPagina(1);
+        }
+
+        // ================================================================
+        //  MUDAR PÁGINA
+        // ================================================================
+        function mudarPagina(num) {
+            if (num > 1 && !colaboradorCarregado) {
+                mostrarStatus('statusFeedback', '⚠️ Por favor, selecione um colaborador primeiro.', 'error');
+                return;
+            }
+            
+            if ((num === 2 || num === 3) && colaboradorJaAvaliado) {
+                mostrarStatus('statusFeedback', `⚠️ ${colaboradorAtual.nome} já foi avaliado hoje!`, 'error');
+                return;
+            }
+            
+            if (num === 3 && resultadoCalculado === null && colaboradorCarregado) {
+                if (!confirm('⚠️ Ainda não calculou o resultado. Deseja calcular automaticamente?')) {
+                    return;
+                }
+                calcularResultado();
+                if (resultadoCalculado === null) {
+                    mostrarStatus('statusFeedback', '⚠️ Por favor, avalie todas as competências primeiro.', 'error');
+                    return;
+                }
+            }
+            
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById('page' + num).classList.add('active');
+            
+            document.querySelectorAll('.step-btn').forEach((btn, index) => {
+                btn.classList.toggle('active', index === num - 1);
+            });
+            
+            document.getElementById('progressFill').style.width = (num * 33.33) + '%';
+            
+            if (num === 3) {
+                document.getElementById('dataAssinatura').textContent = 'Data: ' + new Date().toISOString().split('T')[0];
+            }
+        }
+
+        // ================================================================
+        //  CALCULAR RESULTADO
+        // ================================================================
+        function calcularResultado() {
+            if (!colaboradorCarregado || colaboradorJaAvaliado) return;
+            
+            let totalPonderado = 0;
+            let somaPesos = 0;
+            let notas = [];
+            let todasSelecionadas = true;
+            
+            competencias.forEach(comp => {
+                const select = document.getElementById(`nota_${comp.id}`);
+                if (!select) return;
+                const nota = parseFloat(select.value);
+                if (!nota || nota < 1 || nota > 5) {
+                    todasSelecionadas = false;
+                    document.getElementById(`resultado_${comp.id}`).textContent = '⚠️';
+                    document.getElementById(`status_${comp.id}`).textContent = '❌';
+                    return;
+                }
+                document.getElementById(`status_${comp.id}`).textContent = '✅';
+                const resultado = nota * comp.peso;
+                document.getElementById(`resultado_${comp.id}`).textContent = resultado.toFixed(2);
+                totalPonderado += resultado;
+                somaPesos += comp.peso;
+                notas.push(nota);
+            });
+            
+            const resultDiv = document.getElementById('resultadoFinal');
+            
+            if (!todasSelecionadas || notas.length === 0) {
+                resultDiv.style.display = 'block';
+                resultDiv.innerHTML = `<span style="color:#b33;">⚠️ Por favor, selecione uma nota para todas as competências.</span>`;
+                resultDiv.className = 'resultado-box visible';
+                resultadoCalculado = null;
+                return;
+            }
+            
+            const media = totalPonderado / somaPesos;
+            resultadoCalculado = media;
+            
+            let classificacao = '';
+            let classe = '';
+            
+            if (media >= 4) {
+                classificacao = '🌟 Acima das Expectativas';
+                classe = 'acima';
+            } else if (media >= 2.5) {
+                classificacao = '✅ De acordo com as Expectativas';
+                classe = 'deacordo';
+            } else {
+                classificacao = '⚠️ Abaixo das Expectativas';
+                classe = 'abaixo';
+            }
+            
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'resultado-box visible';
+            resultDiv.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap;">
+                    <div>
+                        <div style="font-size:0.9rem; color:#4a6a5a;">Resultado da Avaliação</div>
+                        <div class="nota-final">${media.toFixed(2)} / 5</div>
+                    </div>
+                    <div style="text-align:right;">
+                        <div class="classif ${classe}" style="font-size:1.3rem;">${classificacao}</div>
+                        <div style="font-size:0.85rem; color:#5a7a6a;">Média simples: ${(notas.reduce((a,b) => a+b, 0) / notas.length).toFixed(2)}</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // ================================================================
+        //  VALIDAR E AVANÇAR
+        // ================================================================
+        function validarEAvançar() {
+            if (!colaboradorCarregado || colaboradorJaAvaliado) return;
+            
+            let todasOk = true;
+            competencias.forEach(comp => {
+                const select = document.getElementById(`nota_${comp.id}`);
+                if (!select || !select.value) {
+                    todasOk = false;
+                    if (select) document.getElementById(`status_${comp.id}`).textContent = '❌';
+                }
+            });
+            
+            if (!todasOk) {
+                mostrarStatus('statusFeedback', '⚠️ Por favor, avalie todas as competências antes de avançar.', 'error');
+                return;
+            }
+            
+            if (resultadoCalculado === null) {
+                calcularResultado();
+                if (resultadoCalculado === null) {
+                    mostrarStatus('statusFeedback', '⚠️ Erro ao calcular o resultado.', 'error');
+                    return;
+                }
+            }
+            
+            mudarPagina(3);
+        }
+
+        // ================================================================
+        //  SALVAR AVALIAÇÃO
+        // ================================================================
+        async function salvarAvaliacao() {
+            if (!colaboradorCarregado || colaboradorJaAvaliado) {
+                mostrarStatus('statusFeedback', '❌ Este colaborador já foi avaliado ou não está selecionado.', 'error');
+                return;
+            }
+            
+            // Validar competências
+            let todasOk = true;
+            competencias.forEach(comp => {
+                const select = document.getElementById(`nota_${comp.id}`);
+                if (!select || !select.value) todasOk = false;
+            });
+            
+            if (!todasOk) {
+                mostrarStatus('statusFeedback', '⚠️ Por favor, avalie todas as competências antes de salvar.', 'error');
+                return;
+            }
+            
+            if (resultadoCalculado === null) {
+                calcularResultado();
+                if (resultadoCalculado === null) {
+                    mostrarStatus('statusFeedback', '⚠️ Erro ao calcular o resultado.', 'error');
+                    return;
+                }
+            }
+            
+            // Validar campos de feedback
+            const campos = [
+                { id: 'feedbackFortes', nome: 'Pontos Fortes' },
+                { id: 'feedbackMelhorar', nome: 'Pontos a Desenvolver' },
+                { id: 'feedbackGlobal', nome: 'Feedback do Avaliador' },
+                { id: 'feedbackCarreira', nome: 'Desenvolvimento de Carreira' },
+                { id: 'feedbackObjetivos', nome: 'Objetivos' }
+            ];
+            
+            const faltam = campos.filter(c => {
+                const el = document.getElementById(c.id);
+                return !el.value || el.value.trim() === '';
+            });
+            
+            const nomeAssinatura = document.getElementById('nomeAssinatura');
+            if (!nomeAssinatura.value || nomeAssinatura.value.trim() === '') {
+                faltam.push({ nome: 'Assinatura do Colaborador' });
+            }
+            
+            if (faltam.length > 0) {
+                mostrarStatus('statusFeedback', `⚠️ Por favor, preencha: ${faltam.map(f => f.nome).join(', ')}`, 'error');
+                return;
+            }
+            
+            // Construir dados
+            const dados = {
+                avaliador: currentUser?.name || currentUser?.username || 'Desconhecido',
+                colaborador: {
+                    id: colaboradorIDAtual,
+                    nome: colaboradorAtual.nome,
+                    direcao: colaboradorAtual.direcao,
+                    departamento: colaboradorAtual.departamento,
+                    funcao: colaboradorAtual.funcao,
+                    dataAdmissao: colaboradorAtual.dataAdmissao
+                },
+                dataAvaliacao: new Date().toISOString().split('T')[0],
+                competencias: competencias.map(comp => ({
+                    nome: comp.nome,
+                    peso: comp.peso,
+                    nota: parseInt(document.getElementById(`nota_${comp.id}`).value) || 0
+                })),
+                resultado: resultadoCalculado,
+                comentarioAdicional: document.getElementById('comentarioAdicional').value,
+                feedback: {
+                    pontosFortes: document.getElementById('feedbackFortes').value,
+                    pontosMelhorar: document.getElementById('feedbackMelhorar').value,
+                    global: document.getElementById('feedbackGlobal').value,
+                    carreira: document.getElementById('feedbackCarreira').value,
+                    objetivos: document.getElementById('feedbackObjetivos').value
+                },
+                classificacaoFinal: document.getElementById('classificacaoFinal').value,
+                assinatura: {
+                    concordancia: document.querySelector('input[name="concordancia"]:checked').value,
+                    nome: document.getElementById('nomeAssinatura').value,
+                    data: new Date().toISOString().split('T')[0]
+                }
+            };
+            
+            // Verificar duplicado
+            const hoje = new Date().toISOString().split('T')[0];
+            const existe = avaliacoesStorage.some(av => 
+                av.colaborador.id === colaboradorIDAtual && 
+                av.dataAvaliacao === hoje
+            );
+            
+            if (existe) {
+                mostrarStatus('statusFeedback', `❌ ${colaboradorAtual.nome} já foi avaliado hoje!`, 'error');
+                return;
+            }
+            
+            // Salvar
+            const resultado = await salvarNoSharePoint(dados);
+            
+            if (resultado.success) {
+                colaboradorJaAvaliado = true;
+                habilitarCampos(false);
+                
+                const msg = resultado.sharepoint ? 
+                    `✅ Avaliação de <strong>${colaboradorAtual.nome}</strong> salva no SharePoint com sucesso!` :
+                    `✅ Avaliação de <strong>${colaboradorAtual.nome}</strong> salva localmente!`;
+                
+                mostrarStatus('statusFeedback', msg, 'success');
+                
+                document.getElementById('btnAvancar2').innerHTML = '✅ Avaliação concluída!';
+                document.getElementById('btnAvancar2').disabled = true;
+                document.getElementById('btnCalcular').disabled = true;
+                document.getElementById('btnSalvar').disabled = true;
+                document.getElementById('btnPDF').disabled = false;
+                
+                // Atualizar badges
+                if (userRole === 'rh') {
+                    document.getElementById('badgeRH').textContent = await contarAvaliacoes();
+                }
+            } else {
+                mostrarStatus('statusFeedback', `❌ Erro ao salvar: ${resultado.error || 'Tente novamente.'}`, 'error');
+            }
+        }
+
+        // ================================================================
+        //  CONTAR AVALIAÇÕES
+        // ================================================================
+        async function contarAvaliacoes() {
+            return avaliacoesStorage.length;
+        }
+
+        // ================================================================
+        //  EXPORTAR PDF
+        // ================================================================
+        function exportarPDF() {
+            if (!colaboradorAtual) {
+                mostrarStatus('statusFeedback', '❌ Nenhum colaborador selecionado.', 'error');
+                return;
+            }
+            
+            const originalTitle = document.title;
+            document.title = `Avaliação - ${colaboradorAtual.nome}`;
+            
+            const allPages = document.querySelectorAll('.page');
+            const activePage = document.querySelector('.page.active');
+            
+            allPages.forEach(p => p.style.display = 'none');
+            if (activePage) {
+                activePage.style.display = 'block';
+            } else {
+                document.getElementById('page3').style.display = 'block';
+                document.getElementById('page3').classList.add('active');
+            }
+            
+            window.print();
+            
+            allPages.forEach(p => p.style.display = '');
+            document.title = originalTitle;
+            
+            if (activePage) {
+                allPages.forEach(p => p.classList.remove('active'));
+                activePage.classList.add('active');
+            }
+        }
+
+        // ================================================================
+        //  NOVA AVALIAÇÃO
+        // ================================================================
+        function novaAvaliacao() {
+            resultadoCalculado = null;
+            colaboradorJaAvaliado = false;
+            
+            document.getElementById('feedbackFortes').value = '';
+            document.getElementById('feedbackMelhorar').value = '';
+            document.getElementById('feedbackGlobal').value = '';
+            document.getElementById('feedbackCarreira').value = '';
+            document.getElementById('feedbackObjetivos').value = '';
+            document.getElementById('comentarioAdicional').value = '';
+            document.getElementById('nomeAssinatura').value = colaboradorAtual ? colaboradorAtual.nome : '';
+            document.getElementById('classificacaoFinal').value = '2';
+            
+            document.getElementById('resultadoFinal').className = 'resultado-box';
+            document.getElementById('resultadoFinal').style.display = 'none';
+            document.getElementById('statusFeedback').innerHTML = '';
+            document.getElementById('statusFeedback').className = 'status-msg';
+            
+            renderizarCompetencias();
+            habilitarCampos(true);
+            verificarAvaliacaoExistente();
+            
+            mudarPagina(1);
+            
+            if (colaboradorAtual) {
+                mostrarStatus('statusFeedback', `🔄 Nova avaliação para <strong>${colaboradorAtual.nome}</strong>`, 'info');
+            }
+        }
+
+        // ================================================================
+        //  FUNÇÕES DO PAINEL RH
+        // ================================================================
+        async function carregarAvaliacoesRH() {
+            const tbody = document.getElementById('rhTabelaBody');
+            
+            // Buscar dados (local + SharePoint)
+            await carregarDoSharePoint();
+            
+            if (avaliacoesStorage.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="9" style="text-align:center; padding:30px; color:#5a7a6a;">
+                            📭 Nenhuma avaliação encontrada.
+                        </td>
+                    </tr>
+                `;
+                atualizarStats();
+                return;
+            }
+            
+            // Atualizar filtros
+            const deptSelect = document.getElementById('rhFiltroDepartamento');
+            const depts = [...new Set(avaliacoesStorage.map(av => av.colaborador.departamento))];
+            deptSelect.innerHTML = '<option value="">Todos os Departamentos</option>';
+            depts.forEach(d => {
+                const opt = document.createElement('option');
+                opt.value = d;
+                opt.textContent = d;
+                deptSelect.appendChild(opt);
+            });
+            
+            // Aplicar filtros e renderizar
+            filtrarRH();
+            atualizarStats();
+        }
+
+        function filtrarRH() {
+            const nomeFiltro = document.getElementById('rhFiltroNome').value.toLowerCase();
+            const deptFiltro = document.getElementById('rhFiltroDepartamento').value;
+            const classFiltro = document.getElementById('rhFiltroClassificacao').value;
+            
+            let filtradas = avaliacoesStorage;
+            
+            if (nomeFiltro) {
+                filtradas = filtradas.filter(av => 
+                    av.colaborador.nome.toLowerCase().includes(nomeFiltro)
+                );
+            }
+            
+            if (deptFiltro) {
+                filtradas = filtradas.filter(av => 
+                    av.colaborador.departamento === deptFiltro
+                );
+            }
+            
+            if (classFiltro) {
+                filtradas = filtradas.filter(av => 
+                    av.classificacaoFinal === classFiltro
+                );
+            }
+            
+            renderizarTabelaRH(filtradas);
+        }
+
+        function renderizarTabelaRH(dados) {
+            const tbody = document.getElementById('rhTabelaBody');
+            
+            if (dados.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="9" style="text-align:center; padding:30px; color:#5a7a6a;">
+                            🔍 Nenhum resultado encontrado para os filtros aplicados.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            // Ordenar por data (mais recente primeiro)
+            dados.sort((a, b) => new Date(b.dataAvaliacao) - new Date(a.dataAvaliacao));
+            
+            tbody.innerHTML = dados.map((av, index) => {
+                const classificacao = av.classificacaoFinal === '3' ? '🌟 Acima' :
+                                     av.classificacaoFinal === '2' ? '✅ De acordo' :
+                                     '⚠️ Abaixo';
+                const statusClass = av.classificacaoFinal === '3' ? 'concluido' : 'pendente';
+                
+                return `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${formatarData(av.dataAvaliacao)}</td>
+                        <td><strong>${av.colaborador.nome}</strong></td>
+                        <td>${av.colaborador.funcao}</td>
+                        <td>${av.colaborador.departamento}</td>
+                        <td>${av.avaliador}</td>
+                        <td><strong>${av.resultado ? av.resultado.toFixed(2) : '-'}</strong></td>
+                        <td>${classificacao}</td>
+                        <td><span class="status-badge ${statusClass}">✅ Concluído</span></td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function atualizarStats() {
+            document.getElementById('statTotal').textContent = avaliacoesStorage.length;
+            
+            const hoje = new Date().toISOString().split('T')[0];
+            const hojeCount = avaliacoesStorage.filter(av => av.dataAvaliacao === hoje).length;
+            document.getElementById('statHoje').textContent = hojeCount;
+            
+            const resultados = avaliacoesStorage.map(av => av.resultado).filter(r => r !== null && r !== undefined);
+            const media = resultados.length > 0 ? (resultados.reduce((a,b) => a+b, 0) / resultados.length) : 0;
+            document.getElementById('statMedia').textContent = media.toFixed(2);
+            
+            const avaliadores = [...new Set(avaliacoesStorage.map(av => av.avaliador))];
+            document.getElementById('statAvaliadores').textContent = avaliadores.length;
+        }
+
+        function formatarData(data) {
+            if (!data) return '-';
+            const d = new Date(data);
+            return d.toLocaleDateString('pt-PT');
+        }
+
+        // ================================================================
+        //  EXPORTAR PARA SHAREPOINT
+        // ================================================================
+        async function exportarParaSharePoint() {
+            if (avaliacoesStorage.length === 0) {
+                alert('📭 Não há avaliações para exportar.');
+                return;
+            }
+            
+            const siteUrl = localStorage.getItem('spSiteUrl');
+            if (!siteUrl) {
+                alert('⚠️ Configure o URL do SharePoint na aba Configuração.');
+                return;
+            }
+            
+            try {
+                // Exportar como CSV e salvar no SharePoint
+                const csv = gerarCSV(avaliacoesStorage);
+                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                
+                // Salvar no SharePoint via Microsoft Graph
+                const tokenResponse = await msalInstance.acquireTokenSilent({
+                    scopes: ["Files.ReadWrite.All"],
+                    account: currentUser
+                });
+                
+                // Upload para SharePoint
+                const fileName = `Avaliacoes_${new Date().toISOString().split('T')[0]}.csv`;
+                const driveId = await obterDriveId(siteUrl, tokenResponse.accessToken);
+                
+                if (driveId) {
+                    const uploadUrl = `https://graph.microsoft.com/v1.0/drives/${driveId}/root:/${fileName}:/content`;
+                    const response = await fetch(uploadUrl, {
+                        method: 'PUT',
+                        headers: {
+                            'Authorization': `Bearer ${tokenResponse.accessToken}`,
+                            'Content-Type': 'text/csv'
+                        },
+                        body: blob
+                    });
+                    
+                    if (response.ok) {
+                        alert(`✅ Dados exportados com sucesso para o SharePoint!\n📁 Ficheiro: ${fileName}`);
+                    } else {
+                        alert('⚠️ Erro ao exportar para SharePoint. Os dados estão disponíveis localmente.');
+                    }
+                }
+            } catch (error) {
+                console.error('Erro na exportação:', error);
+                alert('❌ Erro ao exportar para SharePoint. Os dados estão disponíveis localmente.');
+            }
+        }
+
+        async function obterDriveId(siteUrl, token) {
+            try {
+                // Extrair site ID do URL
+                const sitePath = siteUrl.replace('https://', '').split('/');
+                const hostname = sitePath[0];
+                const sitePathParts = sitePath.slice(1).join('/');
+                
+                const response = await fetch(`https://graph.microsoft.com/v1.0/sites/${hostname}:/${sitePathParts}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    // Obter drive do site
+                    const driveResponse = await fetch(`https://graph.microsoft.com/v1.0/sites/${data.id}/drive`, {
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Accept': 'application/json'
+                        }
+                    });
+                    
+                    if (driveResponse.ok) {
+                        const driveData = await driveResponse.json();
+                        return driveData.id;
+                    }
+                }
+                return null;
+            } catch (error) {
+                console.error('Erro ao obter Drive ID:', error);
+                return null;
+            }
+        }
+
+        function gerarCSV(dados) {
+            const headers = [
+                'Data', 'Colaborador ID', 'Colaborador', 'Função', 'Departamento',
+                'Avaliador', 'Resultado', 'Classificação',
+                ...competencias.map(c => c.nome)
+            ];
+            
+            const rows = dados.map(av => {
+                const notas = competencias.map(c => {
+                    const comp = av.competencias?.find(co => co.nome === c.nome);
+                    return comp ? comp.nota : '';
+                });
+                
+                return [
+                    av.dataAvaliacao,
+                    av.colaborador.id,
+                    `"${av.colaborador.nome}"`,
+                    `"${av.colaborador.funcao}"`,
+                    `"${av.colaborador.departamento}"`,
+                    `"${av.avaliador}"`,
+                    av.resultado ? av.resultado.toFixed(2) : '',
+                    av.classificacaoFinal,
+                    ...notas
+                ].join(',');
+            });
+            
+            return [headers.join(','), ...rows].join('\n');
+        }
+
+        // ================================================================
+        //  EXPORTAR RELATÓRIO RH
+        // ================================================================
+        function exportarRH_Excel() {
+            if (avaliacoesStorage.length === 0) {
+                alert('📭 Não há avaliações para exportar.');
+                return;
+            }
+            
+            const csv = gerarCSV(avaliacoesStorage);
+            const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `Relatorio_Avaliacoes_${new Date().toISOString().split('T')[0]}.csv`;
+            link.click();
+        }
+
+        function exportarRH_PDF() {
+            // Versão simplificada - usa impressão
+            window.print();
+        }
+
+        // ================================================================
+        //  FUNÇÕES DE CONFIGURAÇÃO
+        // ================================================================
+        function salvarConfiguracao() {
+            const siteUrl = document.getElementById('spSiteUrl').value.trim();
+            const listName = document.getElementById('spListName').value.trim();
+            
+            if (siteUrl) {
+                localStorage.setItem('spSiteUrl', siteUrl);
+            }
+            if (listName) {
+                localStorage.setItem('spListName', listName);
+            }
+            
+            alert('✅ Configuração salva com sucesso!');
+        }
+
+        function exportarDadosLocal() {
+            const key = 'avaliacoes_' + (currentUser?.username || 'default');
+            const dados = localStorage.getItem(key);
+            if (!dados) {
+                alert('📭 Não há dados locais para exportar.');
+                return;
+            }
+            
+            const blob = new Blob([dados], { type: 'application/json' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `avaliacoes_backup_${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+        }
+
+        function importarDadosLocal() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            input.onchange = function(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+                
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    try {
+                        const dados = JSON.parse(event.target.result);
+                        const key = 'avaliacoes_' + (currentUser?.username || 'default');
+                        localStorage.setItem(key, JSON.stringify(dados));
+                        avaliacoesStorage = dados;
+                        atualizarInfoLocal();
+                        alert('✅ Dados importados com sucesso!');
+                        if (userRole === 'rh') {
+                            carregarAvaliacoesRH();
+                        }
+                    } catch (error) {
+                        alert('❌ Erro ao importar dados. Verifique o formato do ficheiro.');
+                    }
+                };
+                reader.readAsText(file);
+            };
+            input.click();
+        }
+
+        function limparDadosLocal() {
+            if (!confirm('⚠️ Tem certeza que deseja apagar TODOS os dados locais?')) return;
+            
+            const key = 'avaliacoes_' + (currentUser?.username || 'default');
+            localStorage.removeItem(key);
+            avaliacoesStorage = [];
+            atualizarInfoLocal();
+            alert('🗑️ Dados locais removidos com sucesso.');
+            
+            if (userRole === 'rh') {
+                carregarAvaliacoesRH();
+            }
+        }
+
+        // ================================================================
+        //  SWITCH DE ABAS
+        // ================================================================
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            
+            document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('active');
+            document.querySelector(`.tab-btn[onclick*="${tab}"]`).classList.add('active');
+            
+            if (tab === 'rh') {
+                carregarAvaliacoesRH();
+            }
+        }
+
+        // ================================================================
+        //  LOGOUT
+        // ================================================================
+        async function logout() {
+            if (confirm('Deseja realmente sair?')) {
+                if (msalInstance) {
+                    await msalInstance.logoutPopup({
+                        postLogoutRedirectUri: window.location.origin + window.location.pathname
+                    });
+                }
+                
+                document.getElementById('mainPage').style.display = 'none';
+                document.getElementById('loginPage').style.display = 'block';
+                
+                currentUser = null;
+                avaliacoesStorage = [];
+            }
+        }
+
+        // ================================================================
+        //  INICIALIZAÇÃO
+        // ================================================================
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('pesquisaID').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    buscarColaborador();
+                }
+            });
+            
+            // Verificar se há configurações salvas
+            const siteUrl = localStorage.getItem('spSiteUrl');
+            const listName = localStorage.getItem('spListName');
+            if (siteUrl) document.getElementById('spSiteUrl').value = siteUrl;
+            if (listName) document.getElementById('spListName').value = listName;
+            
+            renderizarCompetenciasVazias();
+            
+            // Tentar login automático
+            // (será feito quando o utilizador clicar no botão)
+        });
+    </script>
+</body>
+</html>
