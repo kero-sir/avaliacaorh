@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Avaliação de Desempenho - Microsoft 365</title>
+    <title>Avaliação de Desempenho - RH</title>
     
     <!-- MSAL.js para autenticação Microsoft -->
     <script src="https://alcdn.msauth.net/browser/2.38.0/js/msal-browser.min.js"></script>
@@ -1551,15 +1551,14 @@
 
     <script>
         // ================================================================
-        //  CONFIGURAÇÃO DA AUTENTICAÇÃO MICROSOFT
+        //  CONFIGURAÇÃO DA AUTENTICAÇÃO MICROSOFT - SEUS DADOS DO AZURE AD
         // ================================================================
-        // ATENÇÃO: Substitua estes valores pelos da sua aplicação registada no Azure AD
         const msalConfig = {
             auth: {
-                clientId: "SEU_CLIENT_ID_AQUI", // Substituir pelo Client ID da app no Azure AD
-                authority: "https://login.microsoftonline.com/SEU_TENANT_ID_AQUI", // Substituir pelo Tenant ID
-                redirectUri: window.location.origin + window.location.pathname,
-                postLogoutRedirectUri: window.location.origin + window.location.pathname,
+                clientId: "f3ab48d3-09fc-4466-a180-5ad977620019",
+                authority: "https://login.microsoftonline.com/917dfbfd-7aa2-40f8-ba23-b5b213b322f7",
+                redirectUri: "https://kero-sir.github.io/avaliacaorh/",
+                postLogoutRedirectUri: "https://kero-sir.github.io/avaliacaorh/",
             },
             cache: {
                 cacheLocation: "sessionStorage",
@@ -1572,11 +1571,11 @@
         };
 
         // ================================================================
-        //  INICIALIZAÇÃO
+        //  VARIÁVEIS GLOBAIS
         // ================================================================
         let msalInstance = null;
         let currentUser = null;
-        let userRole = "colaborador"; // 'colaborador' ou 'rh'
+        let userRole = "colaborador";
         let avaliacoesStorage = [];
         let colaboradorAtual = null;
         let colaboradorIDAtual = null;
@@ -1594,7 +1593,7 @@
                 "funcao": "Operador de Loja", "dataAdmissao": "2012-06-04" },
             "1014": { "nome": "AURIO MORENO DOMINGOS FRANCISCO", "direcao": "Morro Bento", "departamento": "Frente de Loja",
                 "funcao": "Responsável Operacional Frente Loja", "dataAdmissao": "2022-07-04" },
-            // ... adicione todos os colaboradores que você tem
+            // ADICIONE AQUI TODOS OS SEUS COLABORADORES
         };
 
         // ================================================================
@@ -1624,47 +1623,36 @@
             errorDiv.textContent = '';
 
             try {
-                // Inicializar MSAL
                 msalInstance = new msal.PublicClientApplication(msalConfig);
                 await msalInstance.initialize();
 
-                // Tentar login interativo
                 const response = await msalInstance.loginPopup(loginRequest);
                 
                 if (response.account) {
                     currentUser = response.account;
                     
-                    // Verificar se o utilizador é RH (pode ser baseado em grupo ou email)
-                    // Para simplificar, vamos verificar se o email contém "rh" ou "admin"
                     const email = currentUser.username || currentUser.email || '';
                     userRole = (email.toLowerCase().includes('rh') || 
                                email.toLowerCase().includes('admin') || 
                                email.toLowerCase().includes('hr')) ? 'rh' : 'colaborador';
 
-                    // Carregar dados
                     await carregarDadosIniciais();
                     
-                    // Mostrar página principal
                     document.getElementById('loginPage').style.display = 'none';
                     document.getElementById('mainPage').style.display = 'block';
                     
-                    // Atualizar interface
                     atualizarInterfaceUsuario();
                     
-                    // Se for RH, mostrar a aba RH
                     if (userRole === 'rh') {
                         document.getElementById('tabRH').style.display = 'inline-block';
                         document.getElementById('badgeRH').textContent = await contarAvaliacoes();
-                        // Carregar avaliações
                         await carregarAvaliacoesRH();
                     } else {
                         document.getElementById('tabRH').style.display = 'none';
                     }
 
-                    // Renderizar competências
                     renderizarCompetenciasVazias();
                     
-                    // Mostrar mensagem de boas-vindas
                     mostrarStatus('statusFeedback', `✅ Bem-vindo, ${currentUser.name || currentUser.username}!`, 'success');
                 }
             } catch (error) {
@@ -1677,7 +1665,7 @@
         }
 
         // ================================================================
-        //  FUNÇÕES DE INTERFACE
+        //  FUNÇÕES AUXILIARES
         // ================================================================
         function atualizarInterfaceUsuario() {
             const nome = currentUser.name || currentUser.username || 'Utilizador';
@@ -1687,8 +1675,6 @@
             document.getElementById('userAvatar').textContent = iniciais;
             document.getElementById('userRole').textContent = userRole === 'rh' ? '👔 RH' : '👤 Colaborador';
             document.getElementById('avaliadorNomeDisplay').textContent = nome;
-            
-            // Atualizar badge
             document.getElementById('badgeAvaliacao').textContent = '1';
         }
 
@@ -1699,11 +1685,7 @@
             el.innerHTML = mensagem;
         }
 
-        // ================================================================
-        //  CARREGAR DADOS INICIAIS
-        // ================================================================
         async function carregarDadosIniciais() {
-            // Carregar avaliações do localStorage (cache local)
             const saved = localStorage.getItem('avaliacoes_' + (currentUser?.username || 'default'));
             if (saved) {
                 try {
@@ -1714,10 +1696,6 @@
             } else {
                 avaliacoesStorage = [];
             }
-            
-            // Tentar carregar do SharePoint (se configurado)
-            await carregarDoSharePoint();
-            
             atualizarInfoLocal();
         }
 
@@ -1725,116 +1703,6 @@
             const info = document.getElementById('localStorageInfo');
             if (info) {
                 info.textContent = `${avaliacoesStorage.length} avaliações guardadas localmente`;
-            }
-        }
-
-        // ================================================================
-        //  INTEGRAÇÃO COM SHAREPOINT
-        // ================================================================
-        async function carregarDoSharePoint() {
-            try {
-                const siteUrl = localStorage.getItem('spSiteUrl');
-                const listName = localStorage.getItem('spListName') || 'Avaliacoes';
-                
-                if (!siteUrl || !msalInstance || !currentUser) {
-                    return;
-                }
-
-                // Obter token de acesso
-                const tokenResponse = await msalInstance.acquireTokenSilent({
-                    scopes: ["Sites.ReadWrite.All"],
-                    account: currentUser
-                });
-
-                // Fazer requisição para SharePoint
-                const response = await fetch(`${siteUrl}/_api/web/lists/getbytitle('${listName}')/items`, {
-                    headers: {
-                        'Authorization': `Bearer ${tokenResponse.accessToken}`,
-                        'Accept': 'application/json;odata=verbose'
-                    }
-                });
-
-                if (response.ok) {
-                    const data = await response.json();
-                    // Processar dados do SharePoint
-                    // (implementação depende da estrutura da lista)
-                }
-            } catch (error) {
-                console.log('Erro ao carregar do SharePoint:', error);
-                // Não falha, continua com dados locais
-            }
-        }
-
-        async function salvarNoSharePoint(dados) {
-            try {
-                const siteUrl = localStorage.getItem('spSiteUrl');
-                const listName = localStorage.getItem('spListName') || 'Avaliacoes';
-                
-                if (!siteUrl) {
-                    // Fallback para localStorage
-                    salvarLocal(dados);
-                    return { success: true, local: true };
-                }
-
-                // Obter token
-                const tokenResponse = await msalInstance.acquireTokenSilent({
-                    scopes: ["Sites.ReadWrite.All"],
-                    account: currentUser
-                });
-
-                // Criar item na lista do SharePoint
-                const itemData = {
-                    '__metadata': { 'type': `SP.Data.${listName}ListItem` },
-                    'Title': dados.colaborador.nome,
-                    'ColaboradorID': dados.colaborador.id,
-                    'Avaliador': dados.avaliador,
-                    'DataAvaliacao': dados.dataAvaliacao,
-                    'Resultado': dados.resultado,
-                    'Classificacao': dados.classificacaoFinal,
-                    'Departamento': dados.colaborador.departamento,
-                    'Funcao': dados.colaborador.funcao,
-                    'Feedback': JSON.stringify(dados.feedback),
-                    'Competencias': JSON.stringify(dados.competencias),
-                    'Assinatura': JSON.stringify(dados.assinatura)
-                };
-
-                const response = await fetch(`${siteUrl}/_api/web/lists/getbytitle('${listName}')/items`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${tokenResponse.accessToken}`,
-                        'Accept': 'application/json;odata=verbose',
-                        'Content-Type': 'application/json;odata=verbose'
-                    },
-                    body: JSON.stringify(itemData)
-                });
-
-                if (response.ok) {
-                    return { success: true, sharepoint: true };
-                } else {
-                    // Fallback para localStorage
-                    salvarLocal(dados);
-                    return { success: true, local: true, error: await response.text() };
-                }
-            } catch (error) {
-                console.error('Erro ao salvar no SharePoint:', error);
-                // Fallback
-                salvarLocal(dados);
-                return { success: true, local: true, error: error.message };
-            }
-        }
-
-        function salvarLocal(dados) {
-            const key = 'avaliacoes_' + (currentUser?.username || 'default');
-            // Verificar duplicado
-            const existe = avaliacoesStorage.some(av => 
-                av.colaborador.id === dados.colaborador.id && 
-                av.dataAvaliacao === dados.dataAvaliacao
-            );
-            
-            if (!existe) {
-                avaliacoesStorage.push(dados);
-                localStorage.setItem(key, JSON.stringify(avaliacoesStorage));
-                atualizarInfoLocal();
             }
         }
 
@@ -1928,7 +1796,6 @@
             colaboradorIDAtual = id;
             colaboradorAtual = colaboradores[id];
             
-            // Verificar se já foi avaliado hoje
             verificarAvaliacaoExistente();
             
             if (colaboradorJaAvaliado) {
@@ -1941,7 +1808,6 @@
             msg.className = 'msg-pesquisa sucesso';
             msg.textContent = `✅ ${colaboradorAtual.nome} (ID: ${id})`;
             
-            // Atualizar dados
             document.getElementById('avaliacaoID').textContent = id;
             document.getElementById('avaliacaoNome').textContent = colaboradorAtual.nome;
             document.getElementById('avaliacaoDirecao').textContent = colaboradorAtual.direcao;
@@ -1955,7 +1821,6 @@
             document.getElementById('dataAssinatura').textContent = 'Data: ' + new Date().toISOString().split('T')[0];
             document.getElementById('nomeAssinatura').value = colaboradorAtual.nome;
             
-            // Limpar campos
             document.getElementById('feedbackFortes').value = '';
             document.getElementById('feedbackMelhorar').value = '';
             document.getElementById('feedbackGlobal').value = '';
@@ -2226,7 +2091,6 @@
                 return;
             }
             
-            // Validar competências
             let todasOk = true;
             competencias.forEach(comp => {
                 const select = document.getElementById(`nota_${comp.id}`);
@@ -2246,7 +2110,6 @@
                 }
             }
             
-            // Validar campos de feedback
             const campos = [
                 { id: 'feedbackFortes', nome: 'Pontos Fortes' },
                 { id: 'feedbackMelhorar', nome: 'Pontos a Desenvolver' },
@@ -2270,7 +2133,6 @@
                 return;
             }
             
-            // Construir dados
             const dados = {
                 avaliador: currentUser?.name || currentUser?.username || 'Desconhecido',
                 colaborador: {
@@ -2304,7 +2166,6 @@
                 }
             };
             
-            // Verificar duplicado
             const hoje = new Date().toISOString().split('T')[0];
             const existe = avaliacoesStorage.some(av => 
                 av.colaborador.id === colaboradorIDAtual && 
@@ -2316,39 +2177,27 @@
                 return;
             }
             
-            // Salvar
-            const resultado = await salvarNoSharePoint(dados);
+            // Salvar localmente
+            const key = 'avaliacoes_' + (currentUser?.username || 'default');
+            avaliacoesStorage.push(dados);
+            localStorage.setItem(key, JSON.stringify(avaliacoesStorage));
             
-            if (resultado.success) {
-                colaboradorJaAvaliado = true;
-                habilitarCampos(false);
-                
-                const msg = resultado.sharepoint ? 
-                    `✅ Avaliação de <strong>${colaboradorAtual.nome}</strong> salva no SharePoint com sucesso!` :
-                    `✅ Avaliação de <strong>${colaboradorAtual.nome}</strong> salva localmente!`;
-                
-                mostrarStatus('statusFeedback', msg, 'success');
-                
-                document.getElementById('btnAvancar2').innerHTML = '✅ Avaliação concluída!';
-                document.getElementById('btnAvancar2').disabled = true;
-                document.getElementById('btnCalcular').disabled = true;
-                document.getElementById('btnSalvar').disabled = true;
-                document.getElementById('btnPDF').disabled = false;
-                
-                // Atualizar badges
-                if (userRole === 'rh') {
-                    document.getElementById('badgeRH').textContent = await contarAvaliacoes();
-                }
-            } else {
-                mostrarStatus('statusFeedback', `❌ Erro ao salvar: ${resultado.error || 'Tente novamente.'}`, 'error');
+            colaboradorJaAvaliado = true;
+            habilitarCampos(false);
+            
+            mostrarStatus('statusFeedback', `✅ Avaliação de <strong>${colaboradorAtual.nome}</strong> salva com sucesso!`, 'success');
+            
+            document.getElementById('btnAvancar2').innerHTML = '✅ Avaliação concluída!';
+            document.getElementById('btnAvancar2').disabled = true;
+            document.getElementById('btnCalcular').disabled = true;
+            document.getElementById('btnSalvar').disabled = true;
+            document.getElementById('btnPDF').disabled = false;
+            
+            if (userRole === 'rh') {
+                document.getElementById('badgeRH').textContent = await contarAvaliacoes();
             }
-        }
-
-        // ================================================================
-        //  CONTAR AVALIAÇÕES
-        // ================================================================
-        async function contarAvaliacoes() {
-            return avaliacoesStorage.length;
+            
+            atualizarInfoLocal();
         }
 
         // ================================================================
@@ -2423,9 +2272,6 @@
         async function carregarAvaliacoesRH() {
             const tbody = document.getElementById('rhTabelaBody');
             
-            // Buscar dados (local + SharePoint)
-            await carregarDoSharePoint();
-            
             if (avaliacoesStorage.length === 0) {
                 tbody.innerHTML = `
                     <tr>
@@ -2438,7 +2284,6 @@
                 return;
             }
             
-            // Atualizar filtros
             const deptSelect = document.getElementById('rhFiltroDepartamento');
             const depts = [...new Set(avaliacoesStorage.map(av => av.colaborador.departamento))];
             deptSelect.innerHTML = '<option value="">Todos os Departamentos</option>';
@@ -2449,7 +2294,6 @@
                 deptSelect.appendChild(opt);
             });
             
-            // Aplicar filtros e renderizar
             filtrarRH();
             atualizarStats();
         }
@@ -2496,7 +2340,6 @@
                 return;
             }
             
-            // Ordenar por data (mais recente primeiro)
             dados.sort((a, b) => new Date(b.dataAvaliacao) - new Date(a.dataAvaliacao));
             
             tbody.innerHTML = dados.map((av, index) => {
@@ -2543,102 +2386,21 @@
         }
 
         // ================================================================
-        //  EXPORTAR PARA SHAREPOINT
+        //  EXPORTAR RELATÓRIO
         // ================================================================
-        async function exportarParaSharePoint() {
+        function exportarRH_Excel() {
             if (avaliacoesStorage.length === 0) {
                 alert('📭 Não há avaliações para exportar.');
                 return;
             }
             
-            const siteUrl = localStorage.getItem('spSiteUrl');
-            if (!siteUrl) {
-                alert('⚠️ Configure o URL do SharePoint na aba Configuração.');
-                return;
-            }
-            
-            try {
-                // Exportar como CSV e salvar no SharePoint
-                const csv = gerarCSV(avaliacoesStorage);
-                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-                
-                // Salvar no SharePoint via Microsoft Graph
-                const tokenResponse = await msalInstance.acquireTokenSilent({
-                    scopes: ["Files.ReadWrite.All"],
-                    account: currentUser
-                });
-                
-                // Upload para SharePoint
-                const fileName = `Avaliacoes_${new Date().toISOString().split('T')[0]}.csv`;
-                const driveId = await obterDriveId(siteUrl, tokenResponse.accessToken);
-                
-                if (driveId) {
-                    const uploadUrl = `https://graph.microsoft.com/v1.0/drives/${driveId}/root:/${fileName}:/content`;
-                    const response = await fetch(uploadUrl, {
-                        method: 'PUT',
-                        headers: {
-                            'Authorization': `Bearer ${tokenResponse.accessToken}`,
-                            'Content-Type': 'text/csv'
-                        },
-                        body: blob
-                    });
-                    
-                    if (response.ok) {
-                        alert(`✅ Dados exportados com sucesso para o SharePoint!\n📁 Ficheiro: ${fileName}`);
-                    } else {
-                        alert('⚠️ Erro ao exportar para SharePoint. Os dados estão disponíveis localmente.');
-                    }
-                }
-            } catch (error) {
-                console.error('Erro na exportação:', error);
-                alert('❌ Erro ao exportar para SharePoint. Os dados estão disponíveis localmente.');
-            }
-        }
-
-        async function obterDriveId(siteUrl, token) {
-            try {
-                // Extrair site ID do URL
-                const sitePath = siteUrl.replace('https://', '').split('/');
-                const hostname = sitePath[0];
-                const sitePathParts = sitePath.slice(1).join('/');
-                
-                const response = await fetch(`https://graph.microsoft.com/v1.0/sites/${hostname}:/${sitePathParts}`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Accept': 'application/json'
-                    }
-                });
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    // Obter drive do site
-                    const driveResponse = await fetch(`https://graph.microsoft.com/v1.0/sites/${data.id}/drive`, {
-                        headers: {
-                            'Authorization': `Bearer ${token}`,
-                            'Accept': 'application/json'
-                        }
-                    });
-                    
-                    if (driveResponse.ok) {
-                        const driveData = await driveResponse.json();
-                        return driveData.id;
-                    }
-                }
-                return null;
-            } catch (error) {
-                console.error('Erro ao obter Drive ID:', error);
-                return null;
-            }
-        }
-
-        function gerarCSV(dados) {
             const headers = [
                 'Data', 'Colaborador ID', 'Colaborador', 'Função', 'Departamento',
                 'Avaliador', 'Resultado', 'Classificação',
                 ...competencias.map(c => c.nome)
             ];
             
-            const rows = dados.map(av => {
+            const rows = avaliacoesStorage.map(av => {
                 const notas = competencias.map(c => {
                     const comp = av.competencias?.find(co => co.nome === c.nome);
                     return comp ? comp.nota : '';
@@ -2657,19 +2419,7 @@
                 ].join(',');
             });
             
-            return [headers.join(','), ...rows].join('\n');
-        }
-
-        // ================================================================
-        //  EXPORTAR RELATÓRIO RH
-        // ================================================================
-        function exportarRH_Excel() {
-            if (avaliacoesStorage.length === 0) {
-                alert('📭 Não há avaliações para exportar.');
-                return;
-            }
-            
-            const csv = gerarCSV(avaliacoesStorage);
+            const csv = [headers.join(','), ...rows].join('\n');
             const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
@@ -2678,23 +2428,18 @@
         }
 
         function exportarRH_PDF() {
-            // Versão simplificada - usa impressão
             window.print();
         }
 
         // ================================================================
-        //  FUNÇÕES DE CONFIGURAÇÃO
+        //  CONFIGURAÇÃO
         // ================================================================
         function salvarConfiguracao() {
             const siteUrl = document.getElementById('spSiteUrl').value.trim();
             const listName = document.getElementById('spListName').value.trim();
             
-            if (siteUrl) {
-                localStorage.setItem('spSiteUrl', siteUrl);
-            }
-            if (listName) {
-                localStorage.setItem('spListName', listName);
-            }
+            if (siteUrl) localStorage.setItem('spSiteUrl', siteUrl);
+            if (listName) localStorage.setItem('spListName', listName);
             
             alert('✅ Configuração salva com sucesso!');
         }
@@ -2758,14 +2503,49 @@
         }
 
         // ================================================================
+        //  EXPORTAR PARA SHAREPOINT (SIMPLIFICADO)
+        // ================================================================
+        async function exportarParaSharePoint() {
+            if (avaliacoesStorage.length === 0) {
+                alert('📭 Não há avaliações para exportar.');
+                return;
+            }
+            
+            const siteUrl = localStorage.getItem('spSiteUrl');
+            if (!siteUrl) {
+                alert('⚠️ Configure o URL do SharePoint na aba Configuração.');
+                return;
+            }
+            
+            try {
+                const csv = exportarRH_Excel();
+                alert(`✅ Dados exportados com sucesso!\n📁 Ficheiro: Relatorio_Avaliacoes_${new Date().toISOString().split('T')[0]}.csv\n\n📌 Lembre-se de fazer o upload manual para o SharePoint.`);
+            } catch (error) {
+                alert('❌ Erro ao exportar. Os dados estão disponíveis localmente.');
+            }
+        }
+
+        // ================================================================
         //  SWITCH DE ABAS
         // ================================================================
         function switchTab(tab) {
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             
-            document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('active');
-            document.querySelector(`.tab-btn[onclick*="${tab}"]`).classList.add('active');
+            const tabMap = {
+                'avaliacao': 'tabAvaliacao',
+                'rh': 'tabRH',
+                'config': 'tabConfig'
+            };
+            
+            document.getElementById(tabMap[tab]).classList.add('active');
+            
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                if (btn.textContent.includes(tab === 'avaliacao' ? 'Avaliação' : 
+                    tab === 'rh' ? 'RH' : 'Configuração')) {
+                    btn.classList.add('active');
+                }
+            });
             
             if (tab === 'rh') {
                 carregarAvaliacoesRH();
@@ -2779,7 +2559,7 @@
             if (confirm('Deseja realmente sair?')) {
                 if (msalInstance) {
                     await msalInstance.logoutPopup({
-                        postLogoutRedirectUri: window.location.origin + window.location.pathname
+                        postLogoutRedirectUri: "https://kero-sir.github.io/avaliacaorh/"
                     });
                 }
                 
@@ -2801,17 +2581,20 @@
                 }
             });
             
-            // Verificar se há configurações salvas
             const siteUrl = localStorage.getItem('spSiteUrl');
             const listName = localStorage.getItem('spListName');
             if (siteUrl) document.getElementById('spSiteUrl').value = siteUrl;
             if (listName) document.getElementById('spListName').value = listName;
             
             renderizarCompetenciasVazias();
-            
-            // Tentar login automático
-            // (será feito quando o utilizador clicar no botão)
         });
+
+        // ================================================================
+        //  CONTAR AVALIAÇÕES
+        // ================================================================
+        async function contarAvaliacoes() {
+            return avaliacoesStorage.length;
+        }
     </script>
 </body>
 </html>
