@@ -172,6 +172,7 @@
         .medida-item textarea { flex: 1; min-width: 200px; min-height: 40px; padding: 8px 12px; border: 2px solid var(--verde-borda); border-radius: 8px; font-family: inherit; font-size: 14px; resize: vertical; transition: border 0.2s; }
         .medida-item textarea:focus { border-color: var(--verde-medio); outline: none; }
         .medida-item textarea:disabled { opacity: 0.6; cursor: not-allowed; }
+        .medida-item .prioridade-label { font-size: 12px; font-weight: 600; color: #5a7a6a; }
         .medida-item select { padding: 8px 12px; border: 2px solid var(--verde-borda); border-radius: 8px; font-size: 13px; background: white; min-width: 110px; cursor: pointer; }
         .medida-item select:focus { border-color: var(--verde-medio); outline: none; }
         .medida-item select:disabled { opacity: 0.6; cursor: not-allowed; }
@@ -182,22 +183,46 @@
         .prioridade-media { border-left: 4px solid #f39c12 !important; }
         .prioridade-alta { border-left: 4px solid #e74c3c !important; }
         
-        /* LOGIN PAGE - NOVO ESTILO */
-        #loginPage { max-width: 480px; text-align: center; margin: 40px auto; padding: 0 15px; }
-        #loginPage .logo-sir { margin-bottom: 10px; }
-        #loginPage .logo-sir img { max-width: 100px; height: auto; }
-        #loginPage h1 { font-size: 28px; color: var(--verde-escuro); margin-bottom: 5px; }
-        #loginPage .subtitle { font-size: 16px; color: #5a7a6a; margin-bottom: 30px; }
-        #loginPage .login-box { background: var(--verde-suave); padding: 30px; border-radius: 16px; border: 2px solid var(--verde-borda); margin-top: 10px; }
-        #loginPage .login-box p { margin-bottom: 20px; font-size: 15px; color: #3a6a4a; }
-        .btn-microsoft-login { width: 100%; padding: 16px; background: var(--azul-microsoft); color: white; border: none; border-radius: 30px; font-size: 18px; font-weight: 600; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; justify-content: center; gap: 12px; }
+        /* LOGIN PAGE - SIMPLIFICADA */
+        #loginPage { 
+            max-width: 420px; 
+            text-align: center; 
+            margin: 30px auto; 
+            padding: 0 15px; 
+            background: transparent;
+            box-shadow: none;
+        }
+        #loginPage .logo-sir { margin-bottom: 15px; }
+        #loginPage .logo-sir img { max-width: 90px; height: auto; }
+        #loginPage h1 { font-size: 26px; color: var(--verde-escuro); margin-bottom: 2px; letter-spacing: 1px; }
+        #loginPage .subtitle { font-size: 14px; color: #7a9a8a; margin-bottom: 25px; font-weight: 300; }
+        #loginPage .login-box { 
+            background: var(--verde-suave); 
+            padding: 30px 25px; 
+            border-radius: 16px; 
+            border: 2px solid var(--verde-borda); 
+        }
+        .btn-microsoft-login { 
+            width: 100%; 
+            padding: 14px; 
+            background: var(--azul-microsoft); 
+            color: white; 
+            border: none; 
+            border-radius: 30px; 
+            font-size: 16px; 
+            font-weight: 600; 
+            cursor: pointer; 
+            transition: all 0.3s; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            gap: 12px; 
+        }
         .btn-microsoft-login:hover { background: #005a9e; transform: scale(1.02); }
         .login-loading { display: none; margin: 15px 0; }
-        .login-loading .spinner { width: 40px; height: 40px; border: 4px solid var(--verde-borda); border-top-color: var(--verde-medio); border-radius: 50%; animation: spin 1s linear infinite; margin: 10px auto; }
+        .login-loading .spinner { width: 36px; height: 36px; border: 4px solid var(--verde-borda); border-top-color: var(--verde-medio); border-radius: 50%; animation: spin 1s linear infinite; margin: 10px auto; }
         @keyframes spin { to { transform: rotate(360deg); } }
-        .login-error { color: #b33; margin-top: 10px; font-weight: 500; display: none; }
-        .login-info { color: #5a7a6a; font-size: 13px; margin-top: 15px; padding: 15px; background: white; border-radius: 8px; border: 1px solid var(--verde-borda); text-align: left; }
-        .login-info strong { color: var(--verde-escuro); }
+        .login-error { color: #b33; margin-top: 10px; font-weight: 500; display: none; font-size: 14px; }
         
         @media (max-width: 768px) {
             .container { padding: 18px 16px; }
@@ -221,7 +246,7 @@
             .tabs { flex-wrap: nowrap; overflow-x: auto; }
             .tab-btn { padding: 10px 16px; font-size: 13px; }
             .rh-stats { grid-template-columns: 1fr 1fr; }
-            #loginPage { padding: 0 10px; }
+            #loginPage { padding: 0 10px; margin: 20px auto; }
             .medida-item { flex-direction: column; align-items: stretch; }
             .medida-item select { width: 100%; }
         }
@@ -239,21 +264,18 @@
 <body>
 
     <!-- ============================================================ -->
-    <!-- ========== PÁGINA DE LOGIN ========== -->
+    <!-- ========== PÁGINA DE LOGIN - SIMPLIFICADA ========== -->
     <!-- ============================================================ -->
     <div class="container" id="loginPage">
         <div class="logo-sir">
-            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%231a5c3a'/%3E%3Ctext x='50' y='52' font-family='Arial' font-size='36' font-weight='bold' fill='white' text-anchor='middle'%3EK%3C/text%3E%3Ctext x='50' y='78' font-family='Arial' font-size='11' fill='%234a9a6a' text-anchor='middle'%3ESIR%3C/text%3E%3C/svg%3E" alt="Kero SIR Logo" style="max-width:100px; height:auto; border-radius:16px;" />
+            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%231a5c3a'/%3E%3Ctext x='50' y='52' font-family='Arial' font-size='36' font-weight='bold' fill='white' text-anchor='middle'%3EK%3C/text%3E%3Ctext x='50' y='78' font-family='Arial' font-size='11' fill='%234a9a6a' text-anchor='middle'%3ESIR%3C/text%3E%3C/svg%3E" alt="Kero SIR" style="max-width:90px; height:auto; border-radius:16px;" />
         </div>
         <h1>Kero - SIR</h1>
         <p class="subtitle">Sistema Integrado de Requisição</p>
-        <p style="font-size:13px; color:#7a9a8a; margin-bottom:15px;">ACCORD GROUP</p>
         
         <div class="login-box">
-            <p>🔐 <strong>Entrar com Microsoft 365</strong></p>
-            
             <button class="btn-microsoft-login" onclick="loginWithMicrosoft()">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
                     <path d="M11.5 11.5H2.5V2.5H11.5V11.5Z" fill="#F25022"/>
                     <path d="M21.5 11.5H12.5V2.5H21.5V11.5Z" fill="#7FBA00"/>
                     <path d="M11.5 21.5H2.5V12.5H11.5V21.5Z" fill="#00A4EF"/>
@@ -269,6 +291,8 @@
             
             <div class="login-error" id="loginError"></div>
         </div>
+        
+        <p style="font-size:11px; color:#a0b8a8; margin-top:15px;">ACCORD GROUP</p>
     </div>
 
     <!-- ============================================================ -->
@@ -434,13 +458,11 @@
                     <div class="campo"><label>Admissão</label><span class="valor" id="avaliacaoAdmissao">-</span></div>
                 </div>
                 
-                <!-- Grupo Competências Comportamentais -->
                 <div id="competenciasComportamentais" class="competencias-grupo">
                     <h3>🧠 Competências Comportamentais</h3>
                     <div id="competenciasComportamentaisContainer"></div>
                 </div>
                 
-                <!-- Grupo Competências Técnicas -->
                 <div id="competenciasTecnicas" class="competencias-grupo">
                     <h3>⚙️ Competências Técnicas</h3>
                     <div id="competenciasTecnicasContainer"></div>
@@ -608,7 +630,7 @@
         let colaboradorJaAvaliado = false;
 
         // ================================================================
-        //  COMPETÊNCIAS (atualizado com grupos)
+        //  COMPETÊNCIAS
         // ================================================================
         const competencias = [
             { id: 1, nome: "Foco no Cliente", peso: 0.10, grupo: "comportamental" },
@@ -631,17 +653,7 @@
             "101": { "nome": "ANA AUGUSTO PASCOAL MONTEIRO", "direcao": "Kilamba", "departamento": "Gastronomia", "funcao": "Operador de Loja", "dataAdmissao": "2012-06-04" },
             "104": { "nome": "CRISTOVAO VELOSO FRANCISCO", "direcao": "Nova Vida", "departamento": "Frutas e Legumes", "funcao": "Adjunto de Chefe de Secção (Loja)", "dataAdmissao": "2012-06-11" },
             "105": { "nome": "JOAQUIM CASSANJE MITENDE", "direcao": "Viana", "departamento": "Mercearia Doce", "funcao": "Operador de Loja", "dataAdmissao": "2012-07-02" },
-            "108": { "nome": "ANACLETA ISABEL ANTONIO", "direcao": "Nova Vida", "departamento": "Frutas e Legumes", "funcao": "Operador de Loja", "dataAdmissao": "2012-08-07" },
-            "110": { "nome": "DOMINGOS NGUNZA QUINGURI", "direcao": "Nova Vida", "departamento": "Padaria e Pastelaria", "funcao": "Padeiro", "dataAdmissao": "2012-08-07" },
-            "112": { "nome": "AFONSO MARCO CAXALA MUANZA", "direcao": "Nova Vida", "departamento": "Charcutaria", "funcao": "Adjunto de Chefe de Secção (Loja)", "dataAdmissao": "2012-09-03" },
-            "117": { "nome": "PACIENCIA FONSECA INFAFE", "direcao": "ZEE", "departamento": "PREPARAÇÃO", "funcao": "Operador de Logística", "dataAdmissao": "2012-09-10" },
-            "119": { "nome": "EVARISTO BETICO BAIAO", "direcao": "Nova Vida", "departamento": "Padaria e Pastelaria", "funcao": "Padeiro", "dataAdmissao": "2012-10-01" },
-            "120": { "nome": "IMACULADA CLAUDIA ANTONIO ALMEIDA", "direcao": "Nova Vida", "departamento": "Hipermercado Nova Vida", "funcao": "Cartazista (Loja)", "dataAdmissao": "2012-10-01" },
-            "121": { "nome": "MIGUEL PEDRO", "direcao": "Kilamba", "departamento": "Hipermercado Kilamba", "funcao": "Conferente de Portarias (Loja)", "dataAdmissao": "2012-10-01" },
-            "122": { "nome": "ALDA ESTIMA", "direcao": "Lobito", "departamento": "Brinquedo Desporto + Jardins e Produtos", "funcao": "Adjunto de Chefe de Secção (Loja)", "dataAdmissao": "2012-10-08" },
-            "123": { "nome": "CATARINA PASCOAL AMARAL LOPES", "direcao": "Morro Bento", "departamento": "Departamento Não Alimentar", "funcao": "Gerente de Departamento", "dataAdmissao": "2012-10-08" },
-            "130": { "nome": "SEBASTIAO ALEM KASIALA", "direcao": "Cacuaco", "departamento": "Frente de Loja", "funcao": "Responsável Operacional Frente Loja", "dataAdmissao": "2012-10-08" },
-            "131": { "nome": "WILSON JOAO FERREIRA", "direcao": "Talatona", "departamento": "Charcutaria", "funcao": "Chefe de Secção de Loja", "dataAdmissao": "2012-10-08" }
+            "108": { "nome": "ANACLETA ISABEL ANTONIO", "direcao": "Nova Vida", "departamento": "Frutas e Legumes", "funcao": "Operador de Loja", "dataAdmissao": "2012-08-07" }
         };
 
         // ================================================================
@@ -1048,6 +1060,7 @@
             div.id = `medida_${medidaIdCounter}`;
             div.innerHTML = `
                 <textarea id="medida_texto_${medidaIdCounter}" placeholder="Descreva a medida ou ação..." disabled></textarea>
+                <span class="prioridade-label">Prioridade:</span>
                 <select id="medida_prioridade_${medidaIdCounter}" disabled>
                     <option value="baixa">🟢 Baixa</option>
                     <option value="media" selected>🟡 Média</option>
