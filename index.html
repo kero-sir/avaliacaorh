@@ -285,134 +285,84 @@
             </button>
         </div>
 
+        <!-- ========== PÁGINA 1 - INTRODUÇÃO ========== -->
         <!-- ========================================================== -->
-        <!-- ========== ABA AVALIAÇÃO ========== -->
-        <!-- ========================================================== -->
-        <div class="tab-content active" id="tabAvaliacao">
+        <div class="page active" id="page1">
+            <h2 style="color:var(--verde-escuro);">📖 Introdução à Avaliação de Desempenho</h2>
 
-            <div class="pesquisa-area">
-                <label>👤 Avaliador:</label>
-                <span class="avaliador-nome" id="avaliadorNomeDisplay">-</span>
-                <label style="margin-left:15px;">🔍 ID do Colaborador:</label>
-                <input type="number" id="pesquisaID" placeholder="Ex: 101" min="1" />
-                <button class="btn-buscar" onclick="buscarColaborador()">🔍 Buscar</button>
-                <button class="btn-buscar" style="background:#6a8a7a;" onclick="limparBusca()">✖ Limpar</button>
-                <span class="msg-pesquisa" id="msgPesquisa"></span>
-            </div>
-
-            <div class="progress-container">
-                <div class="progress-fill" id="progressFill"></div>
-            </div>
-
-            <div class="steps">
-                <button class="step-btn active" onclick="mudarPagina(1)" id="step1">
-                    <span class="num">1</span> Introdução
-                </button>
-                <button class="step-btn" onclick="mudarPagina(2)" id="step2">
-                    <span class="num">2</span> Avaliação
-                </button>
-                <button class="step-btn" onclick="mudarPagina(3)" id="step3">
-                    <span class="num">3</span> Feedback
-                </button>
-            </div>
-
-            <div class="page active" id="page1">
-                <h2 style="color:var(--verde-escuro);">📖 Introdução à Avaliação de Desempenho</h2>
-                <div class="intro-grid">
-                    <div class="intro-card">
-                        <h3>🎯 Objetivo</h3>
-                        <ul>
-                            <li>Monitorizar a performance do colaborador</li>
-                            <li>Identificar áreas de melhoria</li>
-                            <li>Acompanhar o crescimento profissional</li>
-                        </ul>
-                    </div>
-                    <div class="intro-card">
-                        <h3>👥 Público Alvo</h3>
-                        <ul>
-                            <li>Colaboradores com mais de 3 meses</li>
-                            <li>Operadores (exceto Operadores Principais)</li>
-                        </ul>
-                    </div>
+            <div class="intro-grid">
+                <div class="intro-card">
+                    <h3>🎯 Objetivo</h3>
+                    <ul>
+                        <li>Monitorizar a performance do colaborador de forma objetiva</li>
+                        <li>Identificar e propor áreas de melhoria de desenvolvimento</li>
+                        <li>Acompanhar o crescimento profissional do colaborador</li>
+                        <li>Dar e receber feedback construtivo sobre a performance</li>
+                    </ul>
                 </div>
-                <div style="margin-top:25px; text-align:right;">
-                    <button class="btn btn-primary" id="btnAvancar1" onclick="mudarPagina(2)" disabled>⚠️ Selecione um colaborador</button>
+                <div class="intro-card">
+                    <h3>👥 Público Alvo</h3>
+                    <ul>
+                        <li>Todos os colaboradores contratados há mais de 3 meses</li>
+                        <li>Todas as categorias de Operador, exceto Operadores Principais</li>
+                        <li>Operadores Principais são avaliados como Chefias</li>
+                    </ul>
                 </div>
             </div>
 
-            <div class="page" id="page2">
-                <h2 style="color:var(--verde-escuro);">📊 Ficha de Avaliação</h2>
-                <div class="avaliacao-header">
-                    <div class="campo"><label>ID</label><span class="valor" id="avaliacaoID">-</span></div>
-                    <div class="campo"><label>Funcionário</label><span class="valor" id="avaliacaoNome">-</span></div>
-                    <div class="campo"><label>Direcção</label><span class="valor" id="avaliacaoDirecao">-</span></div>
-                    <div class="campo"><label>Departamento</label><span class="valor" id="avaliacaoDepartamento">-</span></div>
-                    <div class="campo"><label>Função</label><span class="valor" id="avaliacaoFuncao">-</span></div>
-                    <div class="campo"><label>Admissão</label><span class="valor" id="avaliacaoAdmissao">-</span></div>
-                </div>
-                <div id="competenciasContainer"></div>
-                <div style="background:var(--verde-suave); padding:15px 20px; border-radius:10px; margin:15px 0; border:1px solid var(--verde-borda);">
-                    <strong style="color:var(--verde-escuro);">📊 Escala:</strong>
-                    <span style="margin-left:10px;">1-Insuficiente</span>
-                    <span style="margin-left:10px;">2-Parcial</span>
-                    <span style="margin-left:10px;">3-Atende</span>
-                    <span style="margin-left:10px;">4-Supera</span>
-                    <span style="margin-left:10px;">5-Excepcional</span>
-                </div>
-                <button class="btn btn-calcular" id="btnCalcular" onclick="calcularResultado()" disabled>📈 Calcular</button>
-                <div id="resultadoFinal" class="resultado-box"></div>
-                <div style="margin-top:15px;">
-                    <label style="font-weight:600; color:var(--verde-escuro);">Comentário Adicional</label>
-                    <textarea id="comentarioAdicional" style="width:100%; min-height:70px; padding:12px; border:2px solid var(--verde-borda); border-radius:10px; font-family:inherit; font-size:14px; resize:vertical;" disabled></textarea>
-                </div>
-                <div style="margin-top:25px; display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px;">
-                    <button class="btn btn-secondary" onclick="mudarPagina(1)">← Voltar</button>
-                    <button class="btn btn-primary" id="btnAvancar2" onclick="validarEAvançar()" disabled>⚠️ Selecione um colaborador</button>
-                </div>
+            <div class="intro-card" style="border-left-color:var(--verde-claro);">
+                <h3>📋 Metodologia</h3>
+                <p>A ferramenta de avaliação é constituída por dois momentos distintos:</p>
+                <ul style="margin-top:10px;">
+                    <li><strong>1. Ficha de Avaliação</strong> — Avaliação das competências atribuídas a cada função, de acordo com a escala predefinida. A pontuação deverá estar de acordo com as evidências registadas para cada competência.</li>
+                    <li><strong>2. Sessão de Feedback</strong> — Análise e discussão da performance. Momento para dar e receber feedback, com entrevista entre a chefia e o colaborador.</li>
+                </ul>
             </div>
 
-            <div class="page" id="page3">
-                <h2 style="color:var(--verde-escuro);">💬 Sessão de Feedback</h2>
-                <div class="avaliacao-header" style="background:#f0f8f0;">
-                    <div class="campo"><label>Colaborador</label><span class="valor" id="feedbackNome">-</span></div>
-                    <div class="campo"><label>Função</label><span class="valor" id="feedbackFuncao">-</span></div>
-                    <div class="campo"><label>Data</label><span class="valor" id="feedbackData">-</span></div>
-                </div>
-                <h3 style="color:var(--verde-escuro); margin-top:20px;">1. Análise</h3>
-                <div class="feedback-grid">
-                    <div><label>✅ Pontos Fortes</label><textarea id="feedbackFortes" placeholder="Descreva os pontos fortes..." disabled></textarea></div>
-                    <div><label>🔄 Pontos Fracos</label><textarea id="feedbackMelhorar" placeholder="Descreva os pontos fracos..." disabled></textarea></div>
-                </div>
-                <h3 style="color:var(--verde-escuro); margin-top:25px;">2. Avaliação Global</h3>
-                <div class="feedback-full"><label>📝 Feedback</label><textarea id="feedbackGlobal" placeholder="Análise geral..." disabled></textarea></div>
-                <div class="feedback-full"><label>🚀 Competências a Desenvolver</label><textarea id="feedbackCarreira" placeholder="Sugestões..." disabled></textarea></div>
-                <h3 style="color:var(--verde-escuro); margin-top:25px;">🎯 Objetivos</h3>
-                <div class="feedback-full"><label>📋 Metas</label><textarea id="feedbackObjetivos" placeholder="Defina objetivos..." disabled></textarea></div>
-                <h3 style="color:var(--verde-escuro); margin-top:25px;">🏷️ Classificação Final</h3>
-                <select id="classificacaoFinal" class="classificacao-select" style="padding:12px 20px; border:2px solid var(--verde-borda); border-radius:10px; font-size:15px; min-width:250px;" disabled>
-                    <option value="1">1 - Abaixo</option>
-                    <option value="2" selected>2 - De acordo</option>
-                    <option value="3">3 - Acima</option>
-                </select>
-                <div class="assinatura-area">
-                    <h4>✍️ Assinatura</h4>
-                    <div class="assinatura-opcoes">
-                        <label><input type="radio" name="concordancia" value="concordo" checked disabled /> ✅ Concordo</label>
-                        <label><input type="radio" name="concordancia" value="naoconcordo" disabled /> ❌ Não concordo</label>
-                        <label style="flex:1; min-width:150px;">Nome: <input type="text" id="nomeAssinatura" placeholder="Nome completo" disabled /></label>
-                        <span class="data-assinatura" id="dataAssinatura"></span>
-                    </div>
-                </div>
-                <div class="status-msg" id="statusFeedback"></div>
-                <div class="btn-group">
-                    <button class="btn btn-secondary" onclick="mudarPagina(2)" id="btnVoltar2" disabled>← Voltar</button>
-                    <button class="btn btn-success" id="btnSalvar" onclick="salvarAvaliacao()" disabled>💾 Salvar</button>
-                    <button class="btn btn-pdf" id="btnPDF" onclick="exportarPDF()" disabled>📄 PDF</button>
-                    <button class="btn btn-outline" id="btnNova" onclick="novaAvaliacao()" disabled>🔄 Nova</button>
-                </div>
+            <h3 style="color:var(--verde-escuro); margin-top:25px;">📚 Dicionário de Competências</h3>
+            <p style="color:#3a5a4a; margin-bottom:12px;">As competências são comportamentos observáveis que permitem avaliar a performance do colaborador.</p>
+
+            <div class="dicionario-item">
+                <strong>🎯 Foco no Cliente</strong>
+                <p>Proatividade com o cliente, satisfazendo as suas necessidades com compreensão, respeito e disponibilidade. Assegura a qualidade do serviço com eficácia e eficiência.</p>
+            </div>
+            <div class="dicionario-item">
+                <strong>🤝 Compromisso com a Equipa</strong>
+                <p>Facilidade de integração, espírito aberto para diálogo, partilha de conhecimento e experiências. Escuta e valoriza a opinião do outro. Atua com atitude construtiva.</p>
+            </div>
+            <div class="dicionario-item">
+                <strong>📚 Vontade de Aprender</strong>
+                <p>Aplica os conhecimentos da empresa na sua função. Procura informação sobre produtos, serviços e boas práticas para melhorar o seu desempenho.</p>
+            </div>
+            <div class="dicionario-item">
+                <strong>🏆 Orientação para Resultados</strong>
+                <p>Atinge objetivos com rigor e eficácia. Identifica e procura soluções para problemas. Supera dificuldades e alcança resultados com a qualidade esperada.</p>
+            </div>
+            <div class="dicionario-item">
+                <strong>🧠 Análise e Resolução de Problemas</strong>
+                <p>Analisa o problema identificando a informação mais relevante. Toma decisões adequadas e desencadeia ações necessárias à sua resolução.</p>
+            </div>
+            <div class="dicionario-item">
+                <strong>🧹 Organização do Local de Trabalho</strong>
+                <p>Garante arrumação, limpeza, higiene e manutenção da área de trabalho. Prepara e conserva convenientemente as ferramentas de trabalho.</p>
+            </div>
+            <div class="dicionario-item">
+                <strong>📦 Conhecimento do Produto</strong>
+                <p>Conhecimento das características específicas dos produtos e sua localização, para esclarecer o cliente de forma adequada.</p>
+            </div>
+            <div class="dicionario-item">
+                <strong>💼 Dinâmica Comercial</strong>
+                <p>Iniciativa para se dirigir e estabelecer contacto com o cliente. Escuta e entende o cliente, orienta a venda, promove venda cruzada e divulga campanhas.</p>
+            </div>
+            <div class="dicionario-item">
+                <strong>⚙️ Conhecimento dos Processos de Trabalho</strong>
+                <p>Detém e aplica o conhecimento técnico exigido para a sua área de trabalho.</p>
+            </div>
+
+            <div style="margin-top:25px; text-align:right;">
+                <button class="btn btn-primary" onclick="mudarPagina(2)">Avançar para Avaliação →</button>
             </div>
         </div>
-
         <!-- ========================================================== -->
         <!-- ========== ABA PAINEL RH ========== -->
         <!-- ========================================================== -->
